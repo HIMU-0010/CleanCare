@@ -15,6 +15,9 @@ export class User {
   @Column({ nullable: true })
   name: string;
 
+  @Column({ nullable: true })
+  address: string;
+
   @Column({
     type: 'enum',
     enum: Role,
@@ -24,9 +27,6 @@ export class User {
 
   @Column({ nullable: true })
   avatar_url: string;
-
-  @Column({ nullable: true })
-  ward_id: number; // Legacy ID
 
   // New Hierarchy Relations
   

@@ -19,12 +19,14 @@ interface SidebarProps {
   userRole?: string;
 }
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarProps) => {
   const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   
   // Safe navigation retrieval
   let currentRoute = '';
@@ -43,13 +45,13 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
     if (userRole === 'MASTER_ADMIN') {
         const adminItem = {
             label: 'Manage Admins',
-            icon: '👥',
+            // icon: '👥',
             onPress: () => { onClose(); navigation.navigate('AdminManagement'); },
             color: undefined
         };
         const locItem = { 
             label: 'Manage Corporations', 
-            icon: '🏢', 
+            // icon: '🏢', 
             onPress: () => { onClose(); navigation.navigate('ManageCorporations'); },
             color: undefined
         };
@@ -112,7 +114,11 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
       <Animated.View 
         style={[
           styles.sidebar, 
-          { transform: [{ translateX: slideAnim }] }
+          { 
+              transform: [{ translateX: slideAnim }],
+              paddingBottom: insets.bottom + 20, // Add safe area padding + extra
+              paddingTop: 10 // Keep top padding 
+          }
         ]}
       >
         {/* User Info */}
@@ -148,20 +154,22 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
         </View>
 
         {/* Close Button */}
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        {/* <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Text style={styles.closeText}>✕</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </Animated.View>
     </View>
   );
 };
 
 // Hamburger Menu Button Component
-export const HamburgerButton = ({ onPress }: { onPress: () => void }) => (
+export const HamburgerButton = ({ onPress, color = '#333' }: { onPress: () => void; color?: string }) => (
   <TouchableOpacity style={styles.hamburger} onPress={onPress}>
-    <Text style={styles.hamburgerText}>☰</Text>
+    <Text style={[styles.hamburgerText, { color }]}>☰</Text>
   </TouchableOpacity>
 );
+
+import { COLORS } from '../../styles/theme';
 
 const styles = StyleSheet.create({
   container: {
@@ -186,7 +194,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: SIDEBAR_WIDTH,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: COLORS.white,
     paddingTop: 60,
     shadowColor: '#000',
     shadowOffset: { width: -2, height: 0 },
@@ -198,14 +206,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 24,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: 'rgba(0,0,0,0.1)',
     marginHorizontal: 16,
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#007bff',
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -216,12 +224,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   userName: {
-    color: 'white',
+    color: COLORS.primary,
     fontSize: 16,
     fontWeight: '600',
   },
   userRole: {
-    color: 'rgba(255,255,255,0.6)',
+    color: COLORS.gray,
     fontSize: 12,
     marginTop: 4,
   },
@@ -237,9 +245,10 @@ const styles = StyleSheet.create({
   menuIcon: {
     fontSize: 20,
     marginRight: 16,
+    color: COLORS.primary,
   },
   menuLabel: {
-    color: 'white',
+    color: COLORS.primary,
     fontSize: 16,
   },
   closeButton: {
@@ -249,14 +258,14 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   closeText: {
-    color: 'white',
-    fontSize: 20,
+    color: COLORS.primary,
+    fontSize: 24,
   },
   hamburger: {
     padding: 8,
   },
   hamburgerText: {
     fontSize: 24,
-    color: '#333',
+    color: '#333', // Default, overridden by props usually
   },
 });

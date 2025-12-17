@@ -192,10 +192,10 @@ export const AdminManagementScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={styles.title}>Manage Admins</Text>
         <Text style={styles.subtitle}>Hierarchy View</Text>
-      </View>
+      </View> */}
 
       {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 50 }} />

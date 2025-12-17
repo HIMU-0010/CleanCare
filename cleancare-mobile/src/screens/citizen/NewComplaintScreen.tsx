@@ -8,6 +8,7 @@ import { getAuth } from 'firebase/auth';
 import { API_URL } from '../../config/api';
 
 import LocationSelector from '../../components/common/LocationSelector';
+import { COLORS } from '../../styles/theme';
 
 export const NewComplaintScreen = ({ navigation }: any) => {
   const [category, setCategory] = useState('');
@@ -151,7 +152,9 @@ export const NewComplaintScreen = ({ navigation }: any) => {
         />
 
         <Text style={styles.label}>Location</Text>
-        <Button title="Get My Location Coordinates" onPress={getLocation} />
+        <TouchableOpacity style={styles.primaryButton} onPress={getLocation}>
+             <Text style={styles.primaryButtonText}>GET MY LOCATION COORDINATES</Text>
+        </TouchableOpacity>
         {location && <Text style={styles.locationText}>{address}</Text>}
 
         <View style={styles.divider} />
@@ -183,11 +186,22 @@ export const NewComplaintScreen = ({ navigation }: any) => {
         )}
 
         <Text style={styles.label}>Photo</Text>
-        <Button title="Pick an image from camera roll" onPress={pickImage} />
+        <TouchableOpacity style={styles.primaryButton} onPress={pickImage}>
+             <Text style={styles.primaryButtonText}>PICK AN IMAGE FROM CAMERA ROLL</Text>
+        </TouchableOpacity>
         {image && <Image source={{ uri: image }} style={styles.image} />}
 
         <View style={styles.spacer} />
-        <Button title={loading ? "Submitting..." : "Submit Complaint"} onPress={submitComplaint} disabled={loading} color="#007AFF" />
+        
+        <TouchableOpacity 
+            style={[styles.primaryButton, loading && { opacity: 0.7 }]} 
+            onPress={submitComplaint} 
+            disabled={loading}
+        >
+             <Text style={styles.primaryButtonText}>
+                {loading ? "SUBMITTING..." : "SUBMIT COMPLAINT"}
+             </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -202,21 +216,25 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 5,
+    color: COLORS.black,
   },
   label: {
-    fontSize: 16,
-    marginBottom: 5,
+    fontSize: 14,
+    marginBottom: 8,
     marginTop: 15,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#333',
+    textTransform: 'uppercase',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
+    borderColor: '#e1e1e1',
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
   },
   textArea: {
     height: 100,
@@ -227,11 +245,12 @@ const styles = StyleSheet.create({
     height: 200,
     marginTop: 10,
     resizeMode: 'cover',
-    borderRadius: 5,
+    borderRadius: 8,
   },
   locationText: {
-    marginTop: 5,
-    color: 'gray',
+    marginTop: 8,
+    color: '#666',
+    fontSize: 12,
   },
   spacer: {
     height: 30,
@@ -252,15 +271,16 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   toggleBtn: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: '#e0e0e0',
   },
   toggleActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.primary,
   },
   toggleText: {
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#555',
   },
@@ -276,5 +296,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 10,
+  },
+  primaryButton: {
+      backgroundColor: COLORS.primary,
+      paddingVertical: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginTop: 10,
+      shadowColor: COLORS.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+  },
+  primaryButtonText: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 11,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+  },
+  outlineButton: {
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+  },
+  outlineButtonText: {
+      color: COLORS.primary,
+      fontWeight: 'bold',
+      fontSize: 14,
+      textTransform: 'uppercase',
   },
 });

@@ -105,14 +105,14 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
     if (userRole === 'MASTER_ADMIN' || userRole === 'SUPER_ADMIN') {
       items.push({
         label: 'Manage Admins',
-        icon: '👥',
+        // icon: '👥',
         onPress: () => navigation.navigate('AdminManagement'),
       });
     }
     
     items.push({
       label: 'Logout',
-      icon: '🚪',
+      // icon: '🚪',
       onPress: handleLogout,
       color: '#ff6b6b',
     });
@@ -135,6 +135,10 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
   };
 
   const getWardsForZone = () => {
+    if (userRole === 'SUPER_ADMIN') {
+      const zone = assignedZones.find(z => z.id === selectedZoneId);
+      return zone?.wards || [];
+    }
     const corp = corporations.find(c => c.id === selectedCorpId);
     const zone = corp?.zones?.find((z: any) => z.id === selectedZoneId);
     return zone?.wards || [];
@@ -237,6 +241,28 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
               </TouchableOpacity>
             ))}
           </ScrollView>
+
+          {selectedZoneId && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+              <TouchableOpacity
+                style={[styles.filterChip, !selectedWardId && styles.filterChipSelected]}
+                onPress={() => setSelectedWardId('')}
+              >
+                <Text style={[styles.filterChipText, !selectedWardId && styles.filterChipTextSelected]}>All Wards</Text>
+              </TouchableOpacity>
+              {getWardsForZone().map((ward: any) => (
+                <TouchableOpacity
+                  key={ward.id}
+                  style={[styles.filterChip, selectedWardId === ward.id && styles.filterChipSelected]}
+                  onPress={() => setSelectedWardId(ward.id)}
+                >
+                  <Text style={[styles.filterChipText, selectedWardId === ward.id && styles.filterChipTextSelected]}>
+                    {ward.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
       );
     }
@@ -276,61 +302,65 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
           <Text style={styles.title}>Admin Dashboard</Text>
           <Text style={styles.subtitle}>{userRole?.replace('_', ' ')}</Text>
         </View>
-        <HamburgerButton onPress={() => setSidebarOpen(true)} />
+        <HamburgerButton onPress={() => setSidebarOpen(prev => !prev)} />
       </View>
 
-      {renderFilters()}
+      <View style={{ flex: 1, position: 'relative' }}>
+        {renderFilters()}
 
-      {/* Stats */}
-      <View style={styles.statsRow}>
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>{complaints.length}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>{complaints.length}</Text>
+            <Text style={styles.statLabel}>Total</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, { color: '#6c757d' }]}>
+              {complaints.filter(c => c.status === 'SUBMITTED').length}
+            </Text>
+            <Text style={styles.statLabel}>Pending</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, { color: '#fd7e14' }]}>
+              {complaints.filter(c => c.status === 'PROCESSING').length}
+            </Text>
+            <Text style={styles.statLabel}>Processing</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, { color: '#28a745' }]}>
+              {complaints.filter(c => c.status === 'SOLVED').length}
+            </Text>
+            <Text style={styles.statLabel}>Solved</Text>
+          </View>
         </View>
-        <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: '#6c757d' }]}>
-            {complaints.filter(c => c.status === 'SUBMITTED').length}
-          </Text>
-          <Text style={styles.statLabel}>Pending</Text>
-        </View>
-        <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: '#fd7e14' }]}>
-            {complaints.filter(c => c.status === 'PROCESSING').length}
-          </Text>
-          <Text style={styles.statLabel}>Processing</Text>
-        </View>
-        <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: '#28a745' }]}>
-            {complaints.filter(c => c.status === 'SOLVED').length}
-          </Text>
-          <Text style={styles.statLabel}>Solved</Text>
-        </View>
-      </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" style={{ marginTop: 50 }} />
-      ) : (
-        <FlatList
-          data={complaints}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          ListEmptyComponent={
-            <Text style={styles.empty}>No complaints found.</Text>
-          }
+        {loading ? (
+          <ActivityIndicator size="large" style={{ marginTop: 50 }} />
+        ) : (
+          <FlatList
+            data={complaints}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={
+              <Text style={styles.empty}>No complaints found.</Text>
+            }
+          />
+        )}
+
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          items={getSidebarItems()}
+          userName={userProfile?.name}
+          userRole={userRole}
         />
-      )}
-
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        items={getSidebarItems()}
-        userName={userProfile?.name}
-        userRole={userRole}
-      />
+      </View>
     </SafeAreaView>
   );
 };
+
+import { COLORS } from '../../styles/theme';
 
 const styles = StyleSheet.create({
   container: {
@@ -342,17 +372,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: COLORS.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#fff',
   },
   subtitle: {
     fontSize: 12,
-    color: '#666',
+    color: 'rgba(255,255,255,0.9)',
   },
   filterSection: {
     backgroundColor: 'white',
@@ -377,7 +411,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterChipSelected: {
-    backgroundColor: '#007bff',
+    backgroundColor: COLORS.primary,
   },
   filterChipText: {
     fontSize: 13,
@@ -401,7 +435,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#007bff',
+    color: '#333',
   },
   statLabel: {
     fontSize: 11,
@@ -444,7 +478,7 @@ const styles = StyleSheet.create({
   },
   location: {
     fontSize: 12,
-    color: '#007bff',
+    color: COLORS.primary,
     marginBottom: 4,
   },
   date: {

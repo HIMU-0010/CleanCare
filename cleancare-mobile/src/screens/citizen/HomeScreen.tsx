@@ -11,12 +11,49 @@ export const HomeScreen = ({ navigation }: any) => {
     loadUserProfile();
   }, []);
 
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <HamburgerButton 
+          onPress={() => setSidebarOpen(prev => !prev)}
+        />
+      ),
+    });
+  }, [navigation]);
+
   const loadUserProfile = async () => {
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    const profile = await AsyncStorage.getItem('userProfile');
-    if (profile) {
-      const parsed = JSON.parse(profile);
-      setUserName(parsed.name || '');
+    try {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const axios = require('axios').default;
+      const { API_URL } = require('../../config/api');
+
+      const token = await AsyncStorage.getItem('userToken');
+      // If token is missing, might redirect to login, but let's just try to load from storage first
+      // or fetch if possible.
+      if (token) {
+          try {
+             // Fetch fresh profile
+             const profileRes = await axios.get(`${API_URL}/auth/profile`, {
+               headers: { Authorization: `Bearer ${token}` }
+             });
+             const profile = profileRes.data;
+             setUserName(profile.name || '');
+             // Update local storage
+             await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
+             return;
+          } catch (e) {
+             console.log('Failed to fetch profile, using cached', e);
+          }
+      }
+
+      // Fallback to cached
+      const profile = await AsyncStorage.getItem('userProfile');
+      if (profile) {
+        const parsed = JSON.parse(profile);
+        setUserName(parsed.name || '');
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
     }
   };
 
@@ -29,12 +66,12 @@ export const HomeScreen = ({ navigation }: any) => {
   const sidebarItems = [
     {
       label: 'My Complaints',
-      icon: '📋',
+      // icon: '📋',
       onPress: () => navigation.navigate('ComplaintList'),
     },
     {
       label: 'Logout',
-      icon: '🚪',
+      // icon: '🚪',
       onPress: handleLogout,
       color: '#ff6b6b',
     },
@@ -43,13 +80,13 @@ export const HomeScreen = ({ navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Top Bar */}
-      <View style={styles.topBar}>
+      {/* <View style={styles.topBar}>
         <View>
           <Text style={styles.title}>CleanCare</Text>
           <Text style={styles.subtitle}>Keep your city clean</Text>
         </View>
         <HamburgerButton onPress={() => setSidebarOpen(true)} />
-      </View>
+      </View> */}
 
       {/* Main Content */}
       <View style={styles.content}>
@@ -64,7 +101,7 @@ export const HomeScreen = ({ navigation }: any) => {
           style={styles.reportButton}
           onPress={() => navigation.navigate('NewComplaint')}
         >
-          <Text style={styles.reportIcon}>📸</Text>
+          {/* <Text style={styles.reportIcon}>📸</Text> */}
           <Text style={styles.reportButtonText}>Report New Issue</Text>
           <Text style={styles.reportButtonSubtext}>Take a photo and submit a complaint</Text>
         </TouchableOpacity>
@@ -81,17 +118,19 @@ export const HomeScreen = ({ navigation }: any) => {
   );
 };
 
+import { COLORS } from '../../styles/theme';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  topBar: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.primary,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
@@ -131,11 +170,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   reportButton: {
-    backgroundColor: '#007bff',
-    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#007bff',
+    marginBottom: 24,
+    // Add shadow
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -10,16 +10,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const SignupScreen = ({ navigation, route }: any) => {
   const { phone, uid } = route.params || {}; // Passed from Login
   const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
   
   const [wardId, setWardId] = useState<string | null>(null);
   const [zoneId, setZoneId] = useState<string | null>(null);
   const [corpId, setCorpId] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
+  const isFormValid = name.trim().length > 0 && address.trim().length > 0 && wardId && zoneId && corpId && agreedToTerms;
+
   const handleSignup = async () => {
-    if (!name || !wardId || !zoneId || !corpId) {
-      Alert.alert('Error', 'Please fill all fields and select your location.');
+    if (!isFormValid) {
+      // Should handle via UI disabled state, but safety check
       return;
     }
 
@@ -43,6 +47,7 @@ const SignupScreen = ({ navigation, route }: any) => {
         `${API_URL}/auth/register`,
         {
           name,
+          address,
           role: 'USER',
           wardId,
           zoneId,
@@ -57,7 +62,10 @@ const SignupScreen = ({ navigation, route }: any) => {
 
       const { accessToken, user } = response.data;
       await AsyncStorage.setItem('accessToken', accessToken);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      // Consistent naming with Login and HomeScreen
+      await AsyncStorage.setItem('userProfile', JSON.stringify(user));
+      await AsyncStorage.setItem('userRole', 'USER'); // Ensure role is saved too if needed
+
       
       Alert.alert('Success', 'Account created successfully!');
       navigation.replace('CitizenHome');
@@ -72,7 +80,12 @@ const SignupScreen = ({ navigation, route }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Complete Your Profile</Text>
+        {/* Title removed since Header "Create Account" covers it? Or Keep it? 
+            Screenshot shows only header. Let's keep "Complete Your Profile" as helper text 
+            or remove if strictly following screenshot.
+            The screenshot shows "Create Account" in Header. 
+            I will keep "Complete details" as subtitle context.
+        */}
         <Text style={styles.subtitle}>Phone: {phone}</Text>
 
         <Text style={styles.label}>Full Name</Text>
@@ -95,13 +108,39 @@ const SignupScreen = ({ navigation, route }: any) => {
             setCorpId(corp);
           }}
         />
+        <Text style={styles.label}>Street Address</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="House No, Road No, Area..."
+          value={address}
+          onChangeText={setAddress}
+          multiline
+        />
+
+        {/* TnC Section */}
+        <View style={styles.tncContainer}>
+            <TouchableOpacity 
+                style={styles.checkboxContainer} 
+                onPress={() => setAgreedToTerms(!agreedToTerms)}
+            >
+                <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+                    {agreedToTerms && <View style={styles.checkboxInner} />}
+                </View>
+            </TouchableOpacity>
+            <Text style={styles.tncText}>
+                I agree to the <Text style={{fontWeight: 'bold'}}>Terms & Conditions</Text> and <Text style={{fontWeight: 'bold'}}>Privacy Policy</Text>
+            </Text>
+        </View>
 
         <TouchableOpacity 
-          style={[styles.button, loading && styles.disabledButton]} 
+          style={[
+              styles.button, 
+              (!isFormValid || loading) && styles.disabledButton // Disable style if form invalid logic
+          ]} 
           onPress={handleSignup}
-          disabled={loading}
+          disabled={!isFormValid || loading}
         >
-          <Text style={styles.buttonText}>{loading ? 'Creating Account...' : 'Sign Up'}</Text>
+          <Text style={styles.buttonText}>{loading ? 'Creating...' : 'Create Account'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -111,7 +150,7 @@ const SignupScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff', // White background consistent with modern look
   },
   scrollContent: {
     padding: 20,
@@ -119,7 +158,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: '#3FA564',
     marginBottom: 5,
   },
   subtitle: {
@@ -134,12 +173,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f9f9f9',
     padding: 15,
     borderRadius: 8,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#eee',
   },
   sectionHeader: {
     fontSize: 18,
@@ -153,15 +192,50 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 15,
   },
+  tncContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 20,
+      marginBottom: 20,
+  },
+  checkboxContainer: {
+      paddingRight: 10,
+  },
+  checkbox: {
+      width: 24,
+      height: 24,
+      borderWidth: 2,
+      borderColor: '#ccc',
+      borderRadius: 4,
+      justifyContent: 'center',
+      alignItems: 'center',
+  },
+  checkboxChecked: {
+      borderColor: '#3FA564',
+      backgroundColor: '#fff', 
+  },
+  checkboxInner: {
+      width: 14,
+      height: 14,
+      backgroundColor: '#3FA564',
+      borderRadius: 2,
+  },
+  tncText: {
+      fontSize: 14,
+      color: '#333',
+      flex: 1, // Wrap text
+  },
   button: {
-    backgroundColor: COLORS.primary,
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: '#3FA564',
+    padding: 16,
+    borderRadius: 30, // Fully rounded as per screenshot
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
+    elevation: 2,
   },
   disabledButton: {
-    backgroundColor: '#aaa',
+    backgroundColor: 'rgba(63, 165, 100, 0.5)', // Faded green for disabled
+    elevation: 0,
   },
   buttonText: {
     color: '#fff',

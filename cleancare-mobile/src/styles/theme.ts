@@ -1,5 +1,5 @@
 export const COLORS = {
-  primary: '#007AFF', // Default iOS blue, adjust as needed
+  primary: '#3FA564', // CleanCare Green
   secondary: '#5856D6',
   white: '#FFFFFF',
   black: '#000000',

@@ -61,7 +61,7 @@ export class UsersService {
   findOne(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ 
         where: { id },
-        relations: ['assigned_ward', 'assigned_corporation', 'assigned_zones'] 
+        relations: ['assigned_ward', 'assigned_corporation', 'assigned_zones', 'assigned_zones.wards'] 
     });
   }
 }

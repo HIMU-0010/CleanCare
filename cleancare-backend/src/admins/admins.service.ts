@@ -70,7 +70,6 @@ export class AdminsService {
     if (existingAdmin) {
       existingAdmin.role = Role.WARD_ADMIN;
       existingAdmin.name = 'Test Ward Admin';
-      existingAdmin.ward_id = 1;
       await this.usersRepository.save(existingAdmin);
       return { message: 'Test admin updated', user: existingAdmin };
     }
@@ -79,7 +78,6 @@ export class AdminsService {
       phone: '+8801700000000',
       name: 'Test Ward Admin',
       role: Role.WARD_ADMIN,
-      ward_id: 1, // Assign to Ward 1
     });
 
     await this.usersRepository.save(admin);

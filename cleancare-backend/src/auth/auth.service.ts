@@ -50,6 +50,7 @@ export class AuthService {
       const newUser = await this.usersService.create({
           phone: phone,
           name: body.name,
+          address: body.address,
           role: body.role, // Default USER
       });
 

@@ -17,10 +17,23 @@ import { CreateCorporationScreen } from '../screens/admin/CreateCorporationScree
 
 const Stack = createNativeStackNavigator();
 
+import { COLORS } from '../styles/theme';
+
 export const RootNavigator = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator 
+        initialRouteName="Login"
+        screenOptions={{
+            headerStyle: {
+                backgroundColor: COLORS.primary,
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+                fontWeight: 'bold',
+            },
+        }}
+      >
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Signup" component={SignupScreen} options={{ title: 'Create Account' }} />
         <Stack.Screen name="CitizenHome" component={HomeScreen} options={{ title: 'Home' }} />

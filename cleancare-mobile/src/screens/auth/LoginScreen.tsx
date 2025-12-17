@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Button, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Button, TextInput, Alert, ActivityIndicator, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FirebaseRecaptchaVerifierModal, FirebaseRecaptchaBanner } from 'expo-firebase-recaptcha';
 import { getAuth, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
@@ -87,6 +87,7 @@ export const LoginScreen = ({ navigation }: any) => {
         const { accessToken, user } = response.data;
         if (accessToken) {
              await AsyncStorage.setItem('userToken', accessToken);
+             await AsyncStorage.setItem('userProfile', JSON.stringify(user));
              if (user && user.role) {
                  await AsyncStorage.setItem('userRole', user.role);
              }
@@ -115,82 +116,119 @@ export const LoginScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={firebaseConfig}
-        attemptInvisibleVerification={false}
-        // appVerificationDisabledForTesting allows you to skip reCAPTCHA
-        // IF you have added the phone number as a "Test Number" in Firebase Console.
-        appVerificationDisabledForTesting={true}
-      />
-      
-      <Text style={styles.title}>CleanCare Login</Text>
-      
-      {!verificationId ? (
-          <>
-            <Text style={styles.label}>Enter Phone Number (+880...)</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="+8801700000000"
-                autoComplete="tel"
-                keyboardType="phone-pad"
-                textContentType="telephoneNumber"
-                onChangeText={setPhoneNumber}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <FirebaseRecaptchaVerifierModal
+            ref={recaptchaVerifier}
+            firebaseConfig={firebaseConfig}
+            attemptInvisibleVerification={false}
+            // appVerificationDisabledForTesting allows you to skip reCAPTCHA
+            // IF you have added the phone number as a "Test Number" in Firebase Console.
+            appVerificationDisabledForTesting={true}
+        />
+        
+        <View style={styles.logoContainer}>
+            <Image 
+                source={require('../../../assets/logo.png')} 
+                style={styles.logo}
+                resizeMode="contain"
             />
-            {loading ? <ActivityIndicator /> : <Button title="Send Verification Code" onPress={sendVerification} />}
-          </>
-      ) : (
-          <>
-            <Text style={styles.label}>Enter Verification Code</Text>
-            <TextInput
-                style={styles.input}
-                editable={!!verificationId}
-                placeholder="123456"
-                onChangeText={setVerificationCode}
-                keyboardType="number-pad"
-            />
-            {loading ? <ActivityIndicator /> : <Button title="Confirm Code" onPress={confirmCode} />}
-            <Button title="Cancel" onPress={() => setVerificationId('')} color="red" />
-          </>
-      )}
-      
-      {/* Dev Login that actually gets a Token from Backend */}
-       <Button 
-        title="[DEV] Login as Test User" 
-        onPress={async () => {
-          try {
-             setLoading(true);
-             const { API_URL } = require('../../config/api');
-             const axios = require('axios').default;
-             const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+            <Text style={styles.title}>Welcome To Clean Care</Text>
+        </View>
+        
+        <View style={styles.formContainer}>
+            {!verificationId ? (
+                <>
+                    <Text style={styles.label}>Phone Number</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="+880 1XXX-XXXXXX"
+                        placeholderTextColor="#999"
+                        autoComplete="tel"
+                        keyboardType="phone-pad"
+                        textContentType="telephoneNumber"
+                        onChangeText={setPhoneNumber}
+                        value={phoneNumber}
+                    />
+                    
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
+                    ) : (
+                        <TouchableOpacity style={styles.button} onPress={sendVerification}>
+                            <Text style={styles.buttonText}>Send Verification Code</Text>
+                        </TouchableOpacity>
+                    )}
+                </>
+            ) : (
+                <>
+                    <Text style={styles.label}>Enter Verification Code</Text>
+                    <TextInput
+                        style={styles.input}
+                        editable={!!verificationId}
+                        placeholder="123456"
+                        placeholderTextColor="#999"
+                        onChangeText={setVerificationCode}
+                        keyboardType="number-pad"
+                        value={verificationCode}
+                    />
+                    
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
+                    ) : (
+                        <>
+                            <TouchableOpacity style={styles.button} onPress={confirmCode}>
+                                <Text style={styles.buttonText}>Confirm Code</Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity style={styles.cancelButton} onPress={() => setVerificationId('')}>
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </>
+            )}
+        </View>
+        
+        {/* Dev Login Area - Kept discreet at bottom */}
+        <TouchableOpacity 
+            style={styles.devLink}
+            onPress={async () => {
+            try {
+                setLoading(true);
+                const { API_URL } = require('../../config/api');
+                const axios = require('axios').default;
+                const AsyncStorage = require('@react-native-async-storage/async-storage').default;
 
-             // Call backend with the magic DEV token
-             const response = await axios.post(`${API_URL}/auth/login`, {}, {
-               headers: { Authorization: 'Bearer DEV_TEST_TOKEN' }
-             });
-             
-             const { accessToken, user } = response.data;
-             if (accessToken) {
-                await AsyncStorage.setItem('userToken', accessToken);
-                if (user && user.role) {
-                    await AsyncStorage.setItem('userRole', user.role);
-                }
+                // Call backend with the magic DEV token
+                const response = await axios.post(`${API_URL}/auth/login`, {}, {
+                headers: { Authorization: 'Bearer DEV_TEST_TOKEN' }
+                });
                 
-                if (user.role === 'WARD_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MASTER_ADMIN') {
-                    navigation.replace('AdminDashboard');
+                const { accessToken, user } = response.data;
+                if (accessToken) {
+                    await AsyncStorage.setItem('userToken', accessToken);
+                    await AsyncStorage.setItem('userProfile', JSON.stringify(user));
+                    if (user && user.role) {
+                        await AsyncStorage.setItem('userRole', user.role);
+                    }
+                    
+                    if (user.role === 'WARD_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MASTER_ADMIN') {
+                        navigation.replace('AdminDashboard');
+                    } else {
+                        navigation.replace('CitizenHome');
+                    }
                 } else {
-                    navigation.replace('CitizenHome');
+                    Alert.alert('Error', 'No token received from backend');
                 }
-             } else {
-                Alert.alert('Error', 'No token received from backend');
-             }
-          } catch (e: any) {
-             Alert.alert('Dev Login Failed', e.message);
-          } finally {
-             setLoading(false);
-          }
-        }} 
-      />
+            } catch (e: any) {
+                Alert.alert('Dev Login Failed', e.message);
+            } finally {
+                setLoading(false);
+            }
+            }} 
+        >
+            <Text style={styles.devLinkText}>[DEV] Login as Test User</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -198,25 +236,88 @@ export const LoginScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#3FA564', // Green Theme
+  },
+  scrollContent: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: 24,
+  },
+  logoContainer: {
+      alignItems: 'center',
+      marginBottom: 50,
+  },
+  logo: {
+      width: 120,
+      height: 120,
+      marginBottom: 20,
+      borderRadius: 60, // Circular Logo if needed, or just let resizeMode contain handle it
+      backgroundColor: '#fff', // White bg for the logo circle if transparent
+      borderWidth: 2,
+      borderColor: '#fff',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#fff',
     textAlign: 'center',
   },
+  formContainer: {
+      width: '100%',
+  },
   label: {
-    marginBottom: 10,
+    marginBottom: 8,
     fontSize: 16,
+    color: '#fff',
+    fontWeight: '500',
+    marginLeft: 4,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 20,
-    borderRadius: 5,
-  }
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 30, // Fully rounded
+    fontSize: 16,
+    marginBottom: 24,
+    color: '#333',
+    elevation: 2, // Shadow for Android
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  button: {
+      backgroundColor: '#fff',
+      paddingVertical: 16,
+      borderRadius: 30,
+      alignItems: 'center',
+      marginTop: 10,
+      elevation: 3,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+  },
+  buttonText: {
+      color: '#3FA564',
+      fontSize: 18,
+      fontWeight: 'bold',
+  },
+  cancelButton: {
+      marginTop: 20,
+      alignItems: 'center',
+  },
+  cancelButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      textDecorationLine: 'underline',
+  },
+  devLink: {
+      marginTop: 40,
+      alignItems: 'center',
+  },
+  devLinkText: {
+      color: 'rgba(255, 255, 255, 0.6)',
+      fontSize: 12,
+  },
 });

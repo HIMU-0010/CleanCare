@@ -34,13 +34,12 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState<'createCorp' | 'addZone' | 'addWard'>('createCorp');
+  const [modalType, setModalType] = useState<'addZone' | 'addWard'>('addZone');
   const [selectedCorpId, setSelectedCorpId] = useState<string>('');
   const [selectedZoneId, setSelectedZoneId] = useState<string>('');
   
   // Form State
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
   const [number, setNumber] = useState('');
 
   const fetchLocations = async () => {
@@ -78,10 +77,7 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
       const token = await AsyncStorage.getItem('userToken');
       const headers = { Authorization: `Bearer ${token}` };
 
-      if (modalType === 'createCorp') {
-        if (!name || !code) return Alert.alert('Error', 'Please fill all fields');
-        await axios.post(`${API_URL}/locations/corporations`, { name, code }, { headers });
-      } else if (modalType === 'addZone') {
+      if (modalType === 'addZone') {
         if (!name) return Alert.alert('Error', 'Please enter zone name');
         await axios.post(`${API_URL}/locations/zones`, { name, corporationId: selectedCorpId }, { headers });
       } else if (modalType === 'addWard') {
@@ -102,7 +98,6 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
 
   const resetForm = () => {
     setName('');
-    setCode('');
   };
 
   const openCreateCorp = () => {
@@ -140,12 +135,12 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.topBar}>
+      {/* <View style={styles.topBar}>
         <View>
           <Text style={styles.title}>Manage Corporations</Text>
           <Text style={styles.subtitle}>{corporations.length} Corporations</Text>
         </View>
-      </View>
+      </View> */}
 
       {/* Content */}
       {loading ? (
@@ -225,33 +220,24 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>
-                    {modalType === 'createCorp' ? 'Create Corporation' : 
-                     modalType === 'addZone' ? 'Add Zone' : 'Add Ward'}
+                    {modalType === 'addZone' ? 'Add Zone' : 'Add Ward'}
                 </Text>
-                
-                <TextInput 
-                    style={styles.input} 
-                    placeholder="Name" 
-                    value={name} 
-                    onChangeText={setName} 
-                />
 
-                {modalType === 'createCorp' && (
+                {modalType === 'addZone' && (
                     <TextInput 
                         style={styles.input} 
-                        placeholder="Code (e.g., DSCC)" 
-                        value={code} 
-                        onChangeText={setCode} 
+                        placeholder="Zone Name (e.g. Zone 1)" 
+                        value={name} 
+                        onChangeText={setName} 
                     />
                 )}
 
                 {modalType === 'addWard' && (
                     <TextInput 
                         style={styles.input} 
-                        placeholder="Ward Number" 
-                        value={number} 
-                        keyboardType="numeric"
-                        onChangeText={setNumber} 
+                        placeholder="Ward Name (e.g. Ward 1)" 
+                        value={name} 
+                        onChangeText={setName} 
                     />
                 )}
 
