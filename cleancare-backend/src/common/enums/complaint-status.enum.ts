@@ -1,0 +1,6 @@
+export enum ComplaintStatus {
+  SUBMITTED = 'SUBMITTED',
+  PROCESSING = 'PROCESSING',
+  SOLVED = 'SOLVED',
+  REJECTED = 'REJECTED',
+}

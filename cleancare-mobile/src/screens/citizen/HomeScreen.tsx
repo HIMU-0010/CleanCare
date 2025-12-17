@@ -1,0 +1,158 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Sidebar, HamburgerButton } from '../../components/common/Sidebar';
+
+export const HomeScreen = ({ navigation }: any) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const profile = await AsyncStorage.getItem('userProfile');
+    if (profile) {
+      const parsed = JSON.parse(profile);
+      setUserName(parsed.name || '');
+    }
+  };
+
+  const handleLogout = async () => {
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    await AsyncStorage.clear();
+    navigation.replace('Login');
+  };
+
+  const sidebarItems = [
+    {
+      label: 'My Complaints',
+      icon: '📋',
+      onPress: () => navigation.navigate('ComplaintList'),
+    },
+    {
+      label: 'Logout',
+      icon: '🚪',
+      onPress: handleLogout,
+      color: '#ff6b6b',
+    },
+  ];
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Top Bar */}
+      <View style={styles.topBar}>
+        <View>
+          <Text style={styles.title}>CleanCare</Text>
+          <Text style={styles.subtitle}>Keep your city clean</Text>
+        </View>
+        <HamburgerButton onPress={() => setSidebarOpen(true)} />
+      </View>
+
+      {/* Main Content */}
+      <View style={styles.content}>
+        <View style={styles.welcomeCard}>
+          <Text style={styles.welcomeText}>Welcome{userName ? `, ${userName}` : ''}!</Text>
+          <Text style={styles.welcomeSubtext}>
+            Help us keep your neighborhood clean by reporting issues you encounter.
+          </Text>
+        </View>
+
+        <TouchableOpacity 
+          style={styles.reportButton}
+          onPress={() => navigation.navigate('NewComplaint')}
+        >
+          <Text style={styles.reportIcon}>📸</Text>
+          <Text style={styles.reportButtonText}>Report New Issue</Text>
+          <Text style={styles.reportButtonSubtext}>Take a photo and submit a complaint</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        items={sidebarItems}
+        userName={userName}
+        userRole="Citizen"
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#007bff',
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#666',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  welcomeCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  welcomeSubtext: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  reportButton: {
+    backgroundColor: '#007bff',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#007bff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  reportIcon: {
+    fontSize: 40,
+    marginBottom: 12,
+  },
+  reportButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  reportButtonSubtext: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 13,
+  },
+});
