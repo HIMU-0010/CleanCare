@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
+import { COLORS } from '../../styles/theme';
 
 interface Ward {
   id: string;
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   content: { padding: 12, paddingBottom: 80 },
   corpSection: { marginBottom: 12, backgroundColor: 'white', borderRadius: 8, overflow: 'hidden', elevation: 2 },
-  corpHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 14, backgroundColor: '#1a1a2e', alignItems: 'center' },
+  corpHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 14, backgroundColor: COLORS.primary, alignItems: 'center' },
   corpTitleRow: { flexDirection: 'row', alignItems: 'center' },
   corpIcon: { fontSize: 18, marginRight: 10 },
   corpName: { color: 'white', fontSize: 16, fontWeight: 'bold' },
@@ -342,6 +343,6 @@ const styles = StyleSheet.create({
   unassignedText: { fontSize: 12, color: '#999', fontStyle: 'italic', marginLeft: 4 },
   
   empty: { textAlign: 'center', marginTop: 50, color: '#999' },
-  fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#007bff', justifyContent: 'center', alignItems: 'center', elevation: 4 },
+  fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center', elevation: 4 },
   fabText: { color: 'white', fontSize: 24, fontWeight: 'bold' },
 });

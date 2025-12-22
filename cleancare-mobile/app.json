@@ -25,6 +25,17 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-video",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you submit evidence for complaints.",
+          "cameraPermission": "The app accesses your camera to let you capture evidence for complaints.",
+          "microphonePermission": "The app accesses your microphone to let you record videos for complaints."
+        }
+      ]
+    ]
   }
 }

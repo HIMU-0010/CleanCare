@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
+import { TermsAndConditionsScreen } from '../screens/auth/TermsAndConditionsScreen';
 import { HomeScreen } from '../screens/citizen/HomeScreen';
 import { NewComplaintScreen } from '../screens/citizen/NewComplaintScreen';
 import { ComplaintListScreen } from '../screens/citizen/ComplaintListScreen';
@@ -36,6 +37,7 @@ export const RootNavigator = () => {
       >
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Signup" component={SignupScreen} options={{ title: 'Create Account' }} />
+        <Stack.Screen name="TermsAndConditions" component={TermsAndConditionsScreen} options={{ title: 'Terms & Conditions' }} />
         <Stack.Screen name="CitizenHome" component={HomeScreen} options={{ title: 'Home' }} />
         <Stack.Screen name="NewComplaint" component={NewComplaintScreen} options={{ title: 'Report Issue' }} />
         <Stack.Screen name="ComplaintList" component={ComplaintListScreen} options={{ title: 'My Complaints' }} />

@@ -128,7 +128,8 @@ const SignupScreen = ({ navigation, route }: any) => {
                 </View>
             </TouchableOpacity>
             <Text style={styles.tncText}>
-                I agree to the <Text style={{fontWeight: 'bold'}}>Terms & Conditions</Text> and <Text style={{fontWeight: 'bold'}}>Privacy Policy</Text>
+                I agree to the <Text style={{fontWeight: 'bold', color: COLORS.primary}} onPress={() => navigation.navigate('TermsAndConditions')}>Terms & Conditions</Text>
+                {/* I agree to the <Text style={{fontWeight: 'bold', color: COLORS.primary}} onPress={() => navigation.navigate('TermsAndConditions')}>Terms & Conditions</Text> and <Text style={{fontWeight: 'bold'}}>Privacy Policy</Text> */}
             </Text>
         </View>
 

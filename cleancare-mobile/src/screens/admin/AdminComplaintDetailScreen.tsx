@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Mod
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
+import { MediaGallery } from '../../components/common/MediaGallery';
+import { COLORS } from '../../styles/theme';
 
 const STATUS_OPTIONS = ['SUBMITTED', 'PROCESSING', 'SOLVED', 'REJECTED'];
 
@@ -46,21 +48,29 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {complaint.images && complaint.images.length > 0 && (
-          <Image source={{ uri: complaint.images[0] }} style={styles.image} />
-        )}
+        <MediaGallery images={complaint.images} videos={complaint.videos} />
 
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.category}>{complaint.category}</Text>
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
-             <View style={[styles.badge, { backgroundColor: getStatusColor(status) }]}>
-              <Text style={styles.statusText}>{status} ✎</Text>
-             </View>
-            </TouchableOpacity>
+             <TouchableOpacity onPress={() => setModalVisible(true)}>
+               <View style={[styles.badge, { backgroundColor: getStatusColor(status) }]}>
+                <Text style={styles.statusText}>{status} ✎</Text>
+               </View>
+             </TouchableOpacity>
+             <Text style={styles.date}>{new Date(complaint.created_at).toLocaleString()}</Text>
           </View>
 
-          <Text style={styles.date}>Submitted: {new Date(complaint.created_at).toLocaleString()}</Text>
+           {/* Category and Subcategory Chips */}
+            <View style={styles.tagsContainer}>
+                <View style={styles.tagBadge}>
+                    <Text style={styles.tagText}>{complaint.category}</Text>
+                </View>
+                {complaint.sub_category ? (
+                    <View style={styles.tagBadgeOutline}>
+                        <Text style={styles.tagTextOutline}>{complaint.sub_category}</Text>
+                    </View>
+                ) : null}
+            </View>
 
           <Text style={styles.sectionTitle}>Description</Text>
           <Text style={styles.text}>{complaint.description}</Text>
@@ -125,10 +135,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  category: {
-    fontSize: 24,
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 15,
+  },
+   tagBadge: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  tagBadgeOutline: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  tagText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: 'bold',
-    flex: 1,
+  },
+  tagTextOutline: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   badge: {
     paddingHorizontal: 12,
@@ -141,7 +178,7 @@ const styles = StyleSheet.create({
   },
   date: {
     color: 'gray',
-    marginBottom: 20,
+    fontSize: 12,
   },
   sectionTitle: {
     fontSize: 18,

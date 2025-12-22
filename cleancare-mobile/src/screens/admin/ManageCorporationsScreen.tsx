@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
+import { COLORS } from '../../styles/theme';
 
 interface Ward {
   id: string;
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   content: { padding: 16, paddingBottom: 80 },
   corpSection: { marginBottom: 12, backgroundColor: 'white', borderRadius: 8, overflow: 'hidden', elevation: 2 },
-  corpHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, backgroundColor: '#1a1a2e', alignItems: 'center' },
+  corpHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, backgroundColor: COLORS.primary, alignItems: 'center' },
   headerTitle: { flexDirection: 'row', alignItems: 'center' },
   folderIcon: { fontSize: 18, marginRight: 8 },
   corpName: { color: 'white', fontSize: 16, fontWeight: 'bold' },
@@ -278,9 +279,9 @@ const styles = StyleSheet.create({
   wardIcon: { fontSize: 12, marginRight: 6 },
   wardName: { fontSize: 14, color: '#555' },
   input: { backgroundColor: '#f5f5f5', padding: 12, borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#ddd' },
-  fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#007bff', justifyContent: 'center', alignItems: 'center', elevation: 4 },
+  fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center', elevation: 4 },
   fabIcon: { color: 'white', fontSize: 24, fontWeight: 'bold' },
-  addButtonInfo: { backgroundColor: '#007bff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  addButtonInfo: { backgroundColor: COLORS.primary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   addButtonSecondary: { backgroundColor: '#6c757d', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
   addButtonText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
   emptyText: { fontStyle: 'italic', color: '#999', fontSize: 12, marginLeft: 12, marginTop: 4 },
@@ -290,6 +291,6 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
   modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
   cancelBtn: { padding: 10, marginRight: 8 },
-  createBtn: { backgroundColor: '#007bff', padding: 10, borderRadius: 8 },
+  createBtn: { backgroundColor: COLORS.primary, padding: 10, borderRadius: 8 },
   btnText: { fontWeight: 'bold', color: '#666' }
 });

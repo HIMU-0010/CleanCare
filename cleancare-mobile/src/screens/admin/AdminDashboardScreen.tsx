@@ -5,6 +5,32 @@ import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { Sidebar, HamburgerButton } from '../../components/common/Sidebar';
+import { Ionicons } from '@expo/vector-icons';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { COMPLAINT_CATEGORIES } from '../../data/complaintCategories';
+
+// Component for video thumbnail
+const VideoThumbnail = ({ uri }: { uri: string }) => {
+  const player = useVideoPlayer(uri, player => {
+    player.muted = true;
+    player.loop = true;
+    // player.pause(); // Start paused
+  });
+
+  return (
+    <View style={styles.videoContainer}>
+        <VideoView 
+            player={player}
+            style={styles.image}
+            contentFit="cover"
+            nativeControls={false} // Hide controls for thumbnail
+        />
+        <View style={styles.searchIconOverlay}>
+            <Ionicons name="play-circle" size={40} color="white" />
+        </View>
+    </View>
+  );
+};
 
 export const AdminDashboardScreen = ({ navigation }: any) => {
   const [complaints, setComplaints] = useState<any[]>([]);
@@ -18,6 +44,8 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
   const [selectedCorpId, setSelectedCorpId] = useState<string>('');
   const [selectedZoneId, setSelectedZoneId] = useState<string>('');
   const [selectedWardId, setSelectedWardId] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
 
   // For Super Admin - their assigned zones
   const [assignedZones, setAssignedZones] = useState<any[]>([]);
@@ -77,6 +105,8 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
       if (selectedCorpId) url += `corporationId=${selectedCorpId}&`;
       if (selectedZoneId) url += `zoneId=${selectedZoneId}&`;
       if (selectedWardId) url += `wardId=${selectedWardId}&`;
+      if (selectedCategory) url += `category=${encodeURIComponent(selectedCategory)}&`;
+      if (selectedSubcategory) url += `subCategory=${encodeURIComponent(selectedSubcategory)}&`;
 
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -91,7 +121,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
     if (!loading && userRole) {
       fetchComplaints();
     }
-  }, [selectedCorpId, selectedZoneId, selectedWardId]);
+  }, [selectedCorpId, selectedZoneId, selectedWardId, selectedCategory, selectedSubcategory]);
 
   const handleLogout = async () => {
     const AsyncStorage = require('@react-native-async-storage/async-storage').default;
@@ -144,11 +174,60 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
     return zone?.wards || [];
   };
 
+  const renderCategoryFilters = () => (
+    <View style={styles.filterSection}>
+        <Text style={styles.filterTitle}>Filter By Category:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+            <TouchableOpacity
+                style={[styles.filterChip, !selectedCategory && styles.filterChipSelected]}
+                onPress={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
+            >
+                <Text style={[styles.filterChipText, !selectedCategory && styles.filterChipTextSelected]}>All</Text>
+            </TouchableOpacity>
+            {COMPLAINT_CATEGORIES.map((cat, index) => (
+                <TouchableOpacity
+                    key={index}
+                    style={[styles.filterChip, selectedCategory === cat.name && styles.filterChipSelected]}
+                    onPress={() => { setSelectedCategory(cat.name); setSelectedSubcategory(''); }}
+                >
+                    <Text style={[styles.filterChipText, selectedCategory === cat.name && styles.filterChipTextSelected]}>
+                        {cat.name}
+                    </Text>
+                </TouchableOpacity>
+            ))}
+        </ScrollView>
+
+        {selectedCategory && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+                 <TouchableOpacity
+                    style={[styles.filterChip, !selectedSubcategory && styles.filterChipSelected]}
+                    onPress={() => setSelectedSubcategory('')}
+                >
+                    <Text style={[styles.filterChipText, !selectedSubcategory && styles.filterChipTextSelected]}>All Subcategories</Text>
+                </TouchableOpacity>
+                {COMPLAINT_CATEGORIES.find(c => c.name === selectedCategory)?.subcategories.map((sub, index) => (
+                    <TouchableOpacity
+                        key={index}
+                        style={[styles.filterChip, selectedSubcategory === sub && styles.filterChipSelected]}
+                        onPress={() => setSelectedSubcategory(sub)}
+                    >
+                        <Text style={[styles.filterChipText, selectedSubcategory === sub && styles.filterChipTextSelected]}>
+                            {sub}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+        )}
+    </View>
+  );
+
   const renderFilters = () => {
     if (userRole === 'MASTER_ADMIN') {
       return (
-        <View style={styles.filterSection}>
-          <Text style={styles.filterTitle}>Filter By:</Text>
+        <View>
+          {renderCategoryFilters()}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterTitle}>Filter By Location:</Text>
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
             <TouchableOpacity
@@ -214,13 +293,16 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
             </ScrollView>
           )}
         </View>
+        </View>
       );
     }
 
     if (userRole === 'SUPER_ADMIN') {
       return (
-        <View style={styles.filterSection}>
-          <Text style={styles.filterTitle}>Your Zones:</Text>
+        <View>
+          {renderCategoryFilters()}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterTitle}>Your Zones:</Text>
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
             <TouchableOpacity
@@ -264,6 +346,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
             </ScrollView>
           )}
         </View>
+        </View>
       );
     }
 
@@ -289,14 +372,16 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
       <Text style={styles.date}>{new Date(item.created_at).toLocaleDateString()}</Text>
       <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
       
-      {item.images && item.images.length > 0 && (
+      {item.images && item.images.length > 0 ? (
         <Image source={{ uri: item.images[0] }} style={styles.image} />
-      )}
+      ) : item.videos && item.videos.length > 0 ? (
+        <VideoThumbnail uri={item.videos[0]} />
+      ) : null}
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.topBar}>
         <View>
           <Text style={styles.title}>Admin Dashboard</Text>
@@ -305,7 +390,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
         <HamburgerButton onPress={() => setSidebarOpen(prev => !prev)} />
       </View>
 
-      <View style={{ flex: 1, position: 'relative' }}>
+      <View style={{ flex: 1, position: 'relative', backgroundColor: '#f5f5f5' }}>
         {renderFilters()}
 
         {/* Stats */}
@@ -365,7 +450,7 @@ import { COLORS } from '../../styles/theme';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.primary,
   },
   topBar: {
     flexDirection: 'row',
@@ -501,5 +586,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 50,
     color: 'gray',
+  },
+  videoContainer: {
+      position: 'relative',
+  },
+  searchIconOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.3)',
+      marginTop: 6, // Matches image marginTop
+      borderRadius: 8,
   },
 });

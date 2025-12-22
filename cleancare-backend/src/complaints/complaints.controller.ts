@@ -8,12 +8,18 @@ import { CreateComplaintDto } from './dto/create-complaint.dto';
 export class ComplaintsController {
   constructor(private readonly complaintsService: ComplaintsService) {}
 
+  @Get('debug-latest')
+  async getLatestDebug() {
+    // Debug endpoint to check DB persistence
+    return this.complaintsService.findLatest();
+  }
+
   @Post()
   @UseGuards(AuthGuard('jwt')) // Use our custom JWT strategy (requires JwtStrategy which we haven't created explicitly yet, or we reuse firebase-jwt if we passed that token. Plan said "Backends return App JWT". So we need JwtStrategy.)
   // Wait, in AuthModule we defined JwtModule but no JwtStrategy. We need to implement JwtStrategy for the standard @UseGuards(AuthGuard('jwt')) to work.
   // For now, let's assume we implement JwtStrategy next or use the verified user from a guard.
   // Actually, Phase 1 Plan said "Issue a custom JWT". So we need a strategy to verify it.
-  @UseInterceptors(FilesInterceptor('images', 5)) // Max 5 images
+  @UseInterceptors(FilesInterceptor('media', 5)) // Max 5 files (images/videos)
   async create(
     @Request() req,
     @Body() createComplaintDto: CreateComplaintDto,
@@ -43,11 +49,15 @@ export class ComplaintsController {
     @Query('corporationId') corporationId?: string,
     @Query('zoneId') zoneId?: string,
     @Query('wardId') wardId?: string,
+    @Query('category') category?: string,
+    @Query('subCategory') subCategory?: string,
   ) {
     return this.complaintsService.findByHierarchy(req.user, {
       corporationId,
       zoneId,
       wardId,
+      category,
+      subCategory,
     });
   }
 

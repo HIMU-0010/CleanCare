@@ -22,6 +22,9 @@ export class Complaint {
   @Column('text', { array: true, default: [] })
   images: string[];
 
+  @Column('text', { array: true, default: [] })
+  videos: string[];
+
   @Column({
     type: 'enum',
     enum: ComplaintStatus,

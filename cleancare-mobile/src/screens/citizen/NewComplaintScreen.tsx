@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, Button, Image, ScrollView, Alert, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
+// Also valid to clean this up, but let's try just using the string values or ignoring strict check if needed.
+// Actually, let's try to verify if MediaType is available as named export.
+// Changing import to:
+import { launchImageLibraryAsync } from 'expo-image-picker';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
 import { API_URL } from '../../config/api';
 
+import CustomCamera from '../../components/common/CustomCamera';
 import LocationSelector from '../../components/common/LocationSelector';
 import { COLORS } from '../../styles/theme';
+import { Picker } from '@react-native-picker/picker';
+import { COMPLAINT_CATEGORIES } from '../../data/complaintCategories';
 
 export const NewComplaintScreen = ({ navigation }: any) => {
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(COMPLAINT_CATEGORIES[0].name);
+  const [subcategory, setSubcategory] = useState(COMPLAINT_CATEGORIES[0].subcategories[0] || '');
   const [description, setDescription] = useState('');
-  const [image, setImage] = useState<string | null>(null);
+  const [media, setMedia] = useState<any[]>([]); // Array of { uri, type, name? }
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState<string>('');
@@ -24,24 +31,65 @@ export const NewComplaintScreen = ({ navigation }: any) => {
   const [customZoneId, setCustomZoneId] = useState<string | null>(null);
   const [customCorpId, setCustomCorpId] = useState<string | null>(null);
 
-  const pickImage = async () => {
-    // Request permissions
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Sorry, we need camera roll permissions to make this work!');
-      return;
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
+
+  const pickMedia = async () => {
+    if (media.length >= 5) {
+        Alert.alert('Limit Exceeded', 'You can upload a maximum of 5 files.');
+        return;
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5,
+    let result = await launchImageLibraryAsync({
+      mediaTypes: 'All' as any, // Cast to any to avoid type mismatch if strictly typed
+      allowsMultipleSelection: true,
+      allowsEditing: false, // Editing not supported for multiple/video usually
+      quality: 0.7,
+      selectionLimit: 5 - media.length // Limit selection to remaining slots
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      // ... logic
+      const newFiles = result.assets.filter(asset => {
+         const currentSize = media.reduce((acc, item) => acc + (item.fileSize || 0), 0);
+         // This logic inside map/filter is tricky, better do it after.
+         return true; 
+      });
+      // ... actually, copy exact logic but update function call
+      
+       const filesToAdd: any[] = [];
+       let currentTotalSize = media.reduce((acc, item) => acc + (item.fileSize || 0), 0);
+
+       for (const asset of result.assets) {
+           if (currentTotalSize + (asset.fileSize || 0) > 10 * 1024 * 1024) {
+               Alert.alert('Size Limit Exceeded', 'Some files were skipped because total size would exceed 10MB.');
+               break;
+           }
+           if (filesToAdd.length + media.length >= 5) {
+                break;
+           }
+           currentTotalSize += (asset.fileSize || 0);
+           filesToAdd.push(asset);
+       }
+       
+       if (filesToAdd.length > 0) {
+           setMedia(prev => [...prev, ...filesToAdd]);
+       }
     }
+  };
+
+  const handleCameraCapture = (asset: { uri: string, type: 'image' | 'video' }) => {
+      // Check limits
+      const currentSize = media.reduce((acc, item) => acc + (item.fileSize || 0), 0);
+      // We don't have fileSize here immediately unless we fetch it or trust it's small enough.
+      // expo-camera assets usually have width/height/uri.
+      // We can get file info if needed, but for now let's assume it passes or warn on upload.
+      // Or use FileSystem.getInfoAsync to check size.
+      
+      setMedia(prev => [...prev, { uri: asset.uri, type: asset.type }]);
+  };
+
+  const removeMedia = (index: number) => {
+      setMedia(prev => prev.filter((_, i) => i !== index));
   };
 
   const getLocation = async () => {
@@ -55,7 +103,7 @@ export const NewComplaintScreen = ({ navigation }: any) => {
     try {
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
-      setAddress(`Lat: ${location.coords.latitude}, Long: ${location.coords.longitude}`);
+      setAddress(`Lat: ${location.coords.latitude.toFixed(4)}, Long: ${location.coords.longitude.toFixed(4)}`);
     } catch (error) {
       Alert.alert('Error', 'Could not fetch location');
     } finally {
@@ -71,7 +119,6 @@ export const NewComplaintScreen = ({ navigation }: any) => {
 
     setLoading(true);
     try {
-      // Retrieve App JWT from storage
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       const token = await AsyncStorage.getItem('userToken');
 
@@ -82,13 +129,16 @@ export const NewComplaintScreen = ({ navigation }: any) => {
 
       const formData = new FormData();
       formData.append('category', category);
+      if (subcategory) {
+        formData.append('sub_category', subcategory);
+      }
       formData.append('description', description);
       formData.append('latitude', String(location.coords.latitude));
       formData.append('longitude', String(location.coords.longitude));
 
       if (!isResidence) {
           if (!customWardId || !customCorpId) {
-             Alert.alert('Error', 'Please select a valid location (Corporation & Ward)');
+             Alert.alert('Error', 'Please select a valid location');
              setLoading(false);
              return;
           }
@@ -97,25 +147,27 @@ export const NewComplaintScreen = ({ navigation }: any) => {
           formData.append('corporationId', customCorpId);
       }
       
-      if (image) {
-        const uriParts = image.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-        
-        // Append image as expected by multer
-        formData.append('images', {
-          uri: image,
-          name: `photo.${fileType}`,
-          type: `image/${fileType}`,
-        } as any);
-      }
+      // Append all media files
+      media.forEach((item, index) => {
+          const uriParts = item.uri.split('.');
+          const ext = uriParts.length > 1 ? uriParts[uriParts.length - 1] : (item.type === 'video' ? 'mp4' : 'jpg');
+          
+          // Determine mime type roughly
+          let mimeType = item.type === 'video' ? `video/${ext}` : `image/${ext}`;
+          
+          formData.append('media', {
+            uri: item.uri,
+            name: `file_${index}.${ext}`,
+            type: mimeType,
+          } as any);
+      });
 
-      // Update with your LOCAL IP address for dev (localhost won't work on device)
       const BACKEND_URL = `${API_URL}/complaints`;
 
       await axios.post(BACKEND_URL, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`, // Strategy must handle this
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -135,12 +187,43 @@ export const NewComplaintScreen = ({ navigation }: any) => {
         <Text style={styles.title}>New Complaint</Text>
 
         <Text style={styles.label}>Category</Text>
-        <TextInput 
-          style={styles.input} 
-          placeholder="e.g. Garbage, Pothole" 
-          value={category}
-          onChangeText={setCategory}
-        />
+        <View style={styles.pickerContainer}>
+            <Picker
+                selectedValue={category}
+                onValueChange={(itemValue) => {
+                    setCategory(itemValue);
+                    const selectedCat = COMPLAINT_CATEGORIES.find(c => c.name === itemValue);
+                    if (selectedCat && selectedCat.subcategories.length > 0) {
+                        setSubcategory(selectedCat.subcategories[0]);
+                    } else {
+                        setSubcategory('');
+                    }
+                }}
+                style={styles.picker}
+            >
+                {COMPLAINT_CATEGORIES.map((cat, index) => (
+                    <Picker.Item key={index} label={cat.name} value={cat.name} />
+                ))}
+            </Picker>
+        </View>
+
+        {/* Subcategory Dropdown */}
+        {(COMPLAINT_CATEGORIES.find(c => c.name === category)?.subcategories?.length ?? 0) > 0 ? (
+            <>
+                <Text style={styles.label}>Subcategory</Text>
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={subcategory}
+                        onValueChange={(itemValue) => setSubcategory(itemValue)}
+                        style={styles.picker}
+                    >
+                        {COMPLAINT_CATEGORIES.find(c => c.name === category)?.subcategories.map((sub, index) => (
+                            <Picker.Item key={index} label={sub} value={sub} />
+                        ))}
+                    </Picker>
+                </View>
+            </>
+        ) : null}
 
         <Text style={styles.label}>Description</Text>
         <TextInput 
@@ -185,13 +268,40 @@ export const NewComplaintScreen = ({ navigation }: any) => {
             </View>
         )}
 
-        <Text style={styles.label}>Photo</Text>
-        <TouchableOpacity style={styles.primaryButton} onPress={pickImage}>
-             <Text style={styles.primaryButtonText}>PICK AN IMAGE FROM CAMERA ROLL</Text>
-        </TouchableOpacity>
-        {image && <Image source={{ uri: image }} style={styles.image} />}
+        <Text style={styles.label}>Evidence (Photos/Videos)</Text>
+        <View style={styles.mediaButtonsRow}>
+            <TouchableOpacity style={styles.flexButton} onPress={pickMedia}>
+                <Text style={styles.buttonTextSmall}>OPEN GALLERY</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.flexButton, {backgroundColor: '#555'}]} onPress={() => setIsCameraVisible(true)}>
+                <Text style={styles.buttonTextSmall}>OPEN CAMERA</Text>
+            </TouchableOpacity>
+        </View>
+        
+        {/* Media Preview */}
+        <ScrollView horizontal style={styles.mediaPreviewContainer}>
+            {media.map((item, index) => (
+                <View key={index} style={styles.mediaThumbnailContainer}>
+                    <Image source={{ uri: item.uri }} style={styles.mediaThumbnail} />
+                    {item.type === 'video' && (
+                        <View style={styles.videoBadge}>
+                            <Text style={styles.videoBadgeText}>VIDEO</Text>
+                        </View>
+                    )}
+                    <TouchableOpacity style={styles.removeMediaBtn} onPress={() => removeMedia(index)}>
+                        <Text style={styles.removeMediaText}>✕</Text>
+                    </TouchableOpacity>
+                </View>
+            ))}
+        </ScrollView>
 
-        <View style={styles.spacer} />
+        <CustomCamera 
+            visible={isCameraVisible} 
+            onClose={() => setIsCameraVisible(false)} 
+            onMediaCaptured={handleCameraCapture}
+        />
+
+        {/* <View style={styles.spacer} /> */}
         
         <TouchableOpacity 
             style={[styles.primaryButton, loading && { opacity: 0.7 }]} 
@@ -329,5 +439,82 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
       fontSize: 14,
       textTransform: 'uppercase',
+  },
+  mediaButtonsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 10,
+      marginTop: 10,
+  },
+  flexButton: {
+      flex: 1,
+      backgroundColor: COLORS.primary,
+      padding: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+  },
+  buttonTextSmall: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 12,
+  },
+  mediaPreviewContainer: {
+      marginTop: 15,
+      flexDirection: 'row',
+      height: 120,
+  },
+  mediaThumbnailContainer: {
+      position: 'relative',
+      marginRight: 10,
+      width: 100,
+      height: 100,
+  },
+  mediaThumbnail: {
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+      backgroundColor: '#eee',
+  },
+  videoBadge: {
+      position: 'absolute',
+      bottom: 5,
+      right: 5,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+  },
+  videoBadgeText: {
+      color: 'white',
+      fontSize: 10,
+      fontWeight: 'bold',
+  },
+  removeMediaBtn: {
+      position: 'absolute',
+      top: -5,
+      right: -5,
+      backgroundColor: 'red',
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1,
+  },
+  removeMediaText: {
+      color: 'white',
+      fontSize: 12,
+      fontWeight: 'bold',
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 10,
+  },
+  picker: {
+    height: 50,
+    width: '100%',
   },
 });

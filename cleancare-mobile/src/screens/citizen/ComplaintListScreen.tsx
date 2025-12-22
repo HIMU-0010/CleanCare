@@ -1,21 +1,45 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { useVideoPlayer, VideoView } from 'expo-video';
+
+// Component for video thumbnail
+const VideoThumbnail = ({ uri }: { uri: string }) => {
+  const player = useVideoPlayer(uri, player => {
+    player.muted = true;
+    player.loop = true;
+    // player.pause(); // Start paused
+  });
+
+  return (
+    <View style={styles.videoContainer}>
+        <VideoView 
+            player={player}
+            style={styles.image}
+            contentFit="cover"
+            nativeControls={false} // Hide controls for thumbnail
+        />
+        <View style={styles.searchIconOverlay}>
+            <Ionicons name="play-circle" size={40} color="white" />
+        </View>
+    </View>
+  );
+};
 
 export const ComplaintListScreen = ({ navigation }: any) => {
   const [complaints, setComplaints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
   const fetchComplaints = async () => {
     try {
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       const token = await AsyncStorage.getItem('userToken');
       
-      if (!token) return; // Should navigate to login
+      if (!token) return;
 
       const response = await axios.get(`${API_URL}/complaints`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -65,11 +89,14 @@ export const ComplaintListScreen = ({ navigation }: any) => {
       <Text style={styles.date}>{new Date(item.created_at).toLocaleDateString()}</Text>
       <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
       
-      {item.images && item.images.length > 0 && (
+      {item.images && item.images.length > 0 ? (
         <Image source={{ uri: item.images[0] }} style={styles.image} />
-      )}
+      ) : item.videos && item.videos.length > 0 ? (
+        <VideoThumbnail uri={item.videos[0]} />
+      ) : null}
     </TouchableOpacity>
   );
+// ... existing rest of file ...
 
   if (loading && !refreshing) {
     return (
@@ -156,6 +183,33 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 8,
     marginTop: 8,
+  },
+  videoPlaceholder: {
+      backgroundColor: '#333',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 10,
+  },
+  videoText: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 16,
+  },
+  videoContainer: {
+      position: 'relative',
+  },
+  searchIconOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.3)',
+      marginTop: 8,
+      borderRadius: 8,
   },
   emptyText: {
     textAlign: 'center',

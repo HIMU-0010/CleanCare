@@ -17,22 +17,27 @@ export class ComplaintsService {
 
   async create(createComplaintDto: CreateComplaintDto, user: User, files: Array<Express.Multer.File>) {
     const imageUrls: string[] = [];
+    const videoUrls: string[] = [];
 
-    // Upload images to Cloudinary
+    // Upload media to Cloudinary
     if (files && files.length > 0) {
       for (const file of files) {
         try {
           const result = await this.cloudinaryService.uploadImage(file);
-          // Check for 'secure_url' based on expected Cloudinary response type, 
-          // or 'url' if secure_url is missing. 
-          // Result type is UploadApiResponse | UploadApiErrorResponse. 
-          // We assume success here if it didn't throw.
-          if ((result as any).secure_url) {
-             imageUrls.push((result as any).secure_url);
+          // Result type is UploadApiResponse. 
+          const url = (result as any).secure_url || (result as any).url;
+          
+          if (url) {
+             const isVideo = file.mimetype.startsWith('video/') || file.originalname.match(/\.(mp4|mov|avi|mkv)$/i);
+             if (isVideo) {
+                 videoUrls.push(url);
+             } else {
+                 imageUrls.push(url);
+             }
           }
         } catch (error) {
-          console.error('Image upload failed', error);
-          throw new InternalServerErrorException('Failed to upload image');
+          console.error('Media upload failed', error);
+          throw new InternalServerErrorException('Failed to upload media');
         }
       }
     }
@@ -56,14 +61,21 @@ export class ComplaintsService {
       ...createComplaintDto,
       user_id: user.id,
       images: imageUrls,
+      videos: videoUrls,
       status: ComplaintStatus.SUBMITTED,
-      
       ward_id: wardId,
       zone_id: zoneId,
       corporation_id: corpId,
     });
 
     return this.complaintsRepository.save(complaint);
+  }
+
+  async findLatest() {
+    return this.complaintsRepository.find({
+      order: { created_at: 'DESC' },
+      take: 1,
+    });
   }
 
   async findAllByUser(user: User) {
@@ -110,15 +122,23 @@ export class ComplaintsService {
 
   async findByHierarchy(
     user: any,
-    filters: { corporationId?: string; zoneId?: string; wardId?: string }
+    filters: { corporationId?: string; zoneId?: string; wardId?: string; category?: string; subCategory?: string }
   ) {
-    const { corporationId, zoneId, wardId } = filters;
+    const { corporationId, zoneId, wardId, category, subCategory } = filters;
     
     const query = this.complaintsRepository.createQueryBuilder('complaint')
       .leftJoinAndSelect('complaint.ward', 'ward')
       .leftJoinAndSelect('complaint.zone', 'zone')
       .leftJoinAndSelect('complaint.corporation', 'corporation')
       .orderBy('complaint.created_at', 'DESC');
+
+    // Apply Category Filters (Global for all roles if provided)
+    if (category) {
+        query.andWhere('complaint.category = :category', { category });
+    }
+    if (subCategory) {
+        query.andWhere('complaint.sub_category = :subCategory', { subCategory });
+    }
 
     // Master Admin can see all, or filter by any level
     if (user.role === 'MASTER_ADMIN') {

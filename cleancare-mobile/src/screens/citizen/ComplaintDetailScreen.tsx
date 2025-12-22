@@ -6,6 +6,9 @@ import { RatingModal } from '../../components/complaint/RatingModal';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MediaGallery } from '../../components/common/MediaGallery';
+
+import { COLORS } from '../../styles/theme';
 
 export const ComplaintDetailScreen = ({ route, navigation }: any) => {
   const { complaint } = route.params;
@@ -60,24 +63,29 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
       <ScrollView contentContainerStyle={styles.scroll}>
         
         {/* Header Image */}
-        {complaint.images && complaint.images.length > 0 ? (
-          <Image source={{ uri: complaint.images[0] }} style={styles.image} />
-        ) : (
-          <View style={[styles.image, styles.placeholder]}>
-            <Text style={{ color: 'gray' }}>No Image</Text>
-          </View>
-        )}
+        {/* Media Gallery */}
+        <MediaGallery images={complaint.images} videos={complaint.videos} />
 
         <View style={styles.content}>
             {/* Status Badge */}
             <View style={styles.headerRow}>
-                <Text style={styles.category}>{complaint.category}</Text>
                 <View style={[styles.badge, { backgroundColor: getStatusColor(complaint.status) }]}>
                     <Text style={styles.statusText}>{complaint.status}</Text>
                 </View>
+                <Text style={styles.date}>{new Date(complaint.created_at).toLocaleDateString()}</Text>
             </View>
 
-            <Text style={styles.date}>Submitted on: {new Date(complaint.created_at).toLocaleDateString()}</Text>
+            {/* Category and Subcategory Chips */}
+            <View style={styles.tagsContainer}>
+                <View style={styles.tagBadge}>
+                    <Text style={styles.tagText}>{complaint.category}</Text>
+                </View>
+                {complaint.sub_category ? (
+                    <View style={styles.tagBadgeOutline}>
+                        <Text style={styles.tagTextOutline}>{complaint.sub_category}</Text>
+                    </View>
+                ) : null}
+            </View>
 
             {/* Description */}
             <Text style={styles.sectionTitle}>Description</Text>
@@ -174,12 +182,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 10,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 5,
   },
-  category: {
-    fontSize: 24,
+  tagBadge: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  tagBadgeOutline: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  tagText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: 'bold',
-    flex: 1,
+  },
+  tagTextOutline: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   badge: {
     paddingHorizontal: 12,
@@ -188,17 +223,18 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   date: {
     color: 'gray',
-    marginBottom: 20,
+    fontSize: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 15,
+    marginTop: 20,
     marginBottom: 8,
     color: '#333',
   },
