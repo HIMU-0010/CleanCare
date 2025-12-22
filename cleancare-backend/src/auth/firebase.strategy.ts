@@ -16,32 +16,34 @@ export class FirebaseStrategy extends PassportStrategy(Strategy, 'firebase-jwt')
   private initializeFirebase() {
     if (firebase.apps.length === 0) {
       try {
-        // Option 1: Using serviceAccountKey.json file
-        // const serviceAccount = require('../../serviceAccountKey.json');
-        
-        // Option 2: Using Environment Variables (Recommended for production)
+        const privateKey = this.configService.get<string>('FIREBASE_PRIVATE_KEY');
+        const clientEmail = this.configService.get<string>('FIREBASE_CLIENT_EMAIL');
         const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
-        // If we had more credentials in ENV, we would construct credential object here
-        
-        // For development with local emulator or default credentials (if file exists)
-        // We will assume the file exists relative to root or set GOOGLE_APPLICATION_CREDENTIALS
-        
-        // Check if we can load from file for local dev
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const serviceAccount = require('../../firebase/serviceAccountKey.json');
-             firebase.initializeApp({
-                credential: firebase.credential.cert(serviceAccount),
-            });
-            console.log('Firebase Admin Initialized with serviceAccountKey.json');
-        } catch (e) { 
-            console.warn('serviceAccountKey.json not found, attempting default initialization or skipping.');
-             // Fallback or just empty init if reliant on GOOGLE_APPLICATION_CREDENTIALS env var
-             firebase.initializeApp({
-                 projectId: projectId
-             });
-        }
 
+        if (privateKey && clientEmail && projectId) {
+             // Production / ENV Var Initialization
+             firebase.initializeApp({
+                credential: firebase.credential.cert({
+                    projectId: projectId,
+                    clientEmail: clientEmail,
+                    // Private key often needs replacement of \\n with \n when loaded from some ENV systems
+                    privateKey: privateKey.replace(/\\n/g, '\n'),
+                }),
+            });
+            console.log('Firebase Admin Initialized with Environment Variables');
+        } else {
+             // Local Dev Fallback: Using serviceAccountKey.json
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const serviceAccount = require('../../firebase/serviceAccountKey.json');
+                 firebase.initializeApp({
+                    credential: firebase.credential.cert(serviceAccount),
+                });
+                console.log('Firebase Admin Initialized with serviceAccountKey.json');
+            } catch (e) { 
+                console.warn('serviceAccountKey.json not found and ENV vars missing. Firebase Admin not initialized correctly.');
+            }
+        }
       } catch (err) {
         console.error('Firebase initialization error', err);
       }

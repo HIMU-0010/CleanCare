@@ -16,15 +16,18 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.cleancare.mobile",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET"
+      ]
     },
     "plugins": [
       "expo-video",
@@ -35,7 +38,20 @@
           "cameraPermission": "The app accesses your camera to let you capture evidence for complaints.",
           "microphonePermission": "The app accesses your microphone to let you record videos for complaints."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "useLegacyPackaging": true
+          }
+        }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6417da25-65e3-4e58-ba4c-49013a100f47"
+      }
+    }
   }
 }
