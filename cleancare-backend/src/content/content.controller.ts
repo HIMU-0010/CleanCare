@@ -1,27 +1,20 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, UseInterceptors, UploadedFiles, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, UseInterceptors, UploadedFiles, UploadedFile, BadRequestException } from '@nestjs/common';
 import { ContentService } from './content.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 
-// Helper for file storage (simplified for local dev)
-const storageConfig = {
-  storage: diskStorage({
-    destination: './uploads/content',
-    filename: (req, file, cb) => {
-      const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-      cb(null, `${randomName}${extname(file.originalname)}`);
-    },
-  }),
-};
+
 
 @Controller('content')
 export class ContentController {
-  constructor(private readonly contentService: ContentService) {}
+  constructor(
+    private readonly contentService: ContentService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   // --- Public Endpoints ---
 
@@ -66,31 +59,46 @@ export class ContentController {
   @Post('calendar')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.MASTER_ADMIN)
-  @UseInterceptors(FileInterceptor('image', storageConfig))
+  @UseInterceptors(FileInterceptor('image'))
   async uploadCalendar(@UploadedFile() file: Express.Multer.File, @Body() body: any) {
-    // Assuming file is served statically
-    // For production, use cloud storage (S3, Cloudinary)
-    // Here we return the local path relative to static serve
-    // Note: You need to configure static serving in main.ts
-    const imageUrl = `uploads/content/${file.filename}`;
+    if (!file) throw new BadRequestException('Image file is required');
+    const result = await this.cloudinaryService.uploadImage(file);
+    // Determine the URL property based on result type
+    const imageUrl = (result as any).secure_url || (result as any).url;
     return this.contentService.uploadCalendar(imageUrl, body.year);
   }
 
   @Post('gallery')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.MASTER_ADMIN)
-  @UseInterceptors(FilesInterceptor('images', 10, storageConfig))
+  @UseInterceptors(FilesInterceptor('images', 10))
   async createGalleryPost(@UploadedFiles() files: Array<Express.Multer.File>, @Body() body: any) {
-    const imageUrls = files.map(file => `uploads/content/${file.filename}`);
-    return this.contentService.createGalleryPost(body.title, body.description, imageUrls);
+    const featureImageUrls: string[] = [];
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const result = await this.cloudinaryService.uploadImage(file);
+        featureImageUrls.push((result as any).secure_url || (result as any).url);
+      }
+    }
+
+    return this.contentService.createGalleryPost(body.title, body.description, featureImageUrls);
   }
 
   @Put('gallery/:id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.MASTER_ADMIN)
-  @UseInterceptors(FilesInterceptor('images', 10, storageConfig))
+  @UseInterceptors(FilesInterceptor('images', 10))
   async updateGalleryPost(@Param('id') id: string, @UploadedFiles() files: Array<Express.Multer.File>, @Body() body: any) {
-    const imageUrls = files ? files.map(file => `uploads/content/${file.filename}`) : [];
-    return this.contentService.updateGalleryPost(id, body.title, body.description, imageUrls);
+    const newImageUrls: string[] = [];
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+         const result = await this.cloudinaryService.uploadImage(file);
+         newImageUrls.push((result as any).secure_url || (result as any).url);
+      }
+    }
+
+    return this.contentService.updateGalleryPost(id, body.title, body.description, newImageUrls);
   }
 }
