@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ComplaintsModule } from './complaints/complaints.module';
 import { AdminsModule } from './admins/admins.module';
 import { LocationsModule } from './locations/locations.module';
+import { ContentModule } from './content/content.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { LocationsModule } from './locations/locations.module';
     ComplaintsModule,
     AdminsModule,
     LocationsModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

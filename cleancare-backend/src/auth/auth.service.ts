@@ -69,4 +69,16 @@ export class AuthService {
           accessToken: this.jwtService.sign(payload)
       };
   }
+
+  async updateUser(userId: string, data: any) {
+    return this.usersService.update(userId, data);
+  }
+
+  async updateResidence(userId: string, wardId: string, zoneId: string, corpId: string) {
+      return this.usersService.updateResidence(userId, wardId, zoneId, corpId);
+  }
+
+  async getUserProfile(userId: string) {
+      return this.usersService.findOne(userId);
+  }
 }

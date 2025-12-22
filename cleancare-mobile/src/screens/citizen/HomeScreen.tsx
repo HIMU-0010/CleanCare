@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Sidebar, HamburgerButton } from '../../components/common/Sidebar';
 
 export const HomeScreen = ({ navigation }: any) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userName, setUserName] = useState('');
 
-  useEffect(() => {
-    loadUserProfile();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadUserProfile();
+    }, [])
+  );
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -66,12 +69,26 @@ export const HomeScreen = ({ navigation }: any) => {
   const sidebarItems = [
     {
       label: 'My Complaints',
-      // icon: '📋',
       onPress: () => navigation.navigate('ComplaintList'),
     },
     {
+        label: 'My Profile',
+        onPress: () => navigation.navigate('Profile'),
+    },
+    {
+      label: 'Emergency Contacts',
+      onPress: () => navigation.navigate('EmergencyContacts'),
+    },
+    {
+      label: 'Government Calendar',
+      onPress: () => navigation.navigate('GovernmentCalendar'),
+    },
+    {
+      label: 'Photo Gallery',
+      onPress: () => navigation.navigate('PhotoGallery'),
+    },
+    {
       label: 'Logout',
-      // icon: '🚪',
       onPress: handleLogout,
       color: '#ff6b6b',
     },

@@ -45,14 +45,17 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
     if (userRole === 'MASTER_ADMIN') {
         const adminItem = {
             label: 'Manage Admins',
-            // icon: '👥',
             onPress: () => { onClose(); navigation.navigate('AdminManagement'); },
             color: undefined
         };
         const locItem = { 
             label: 'Manage Corporations', 
-            // icon: '🏢', 
             onPress: () => { onClose(); navigation.navigate('ManageCorporations'); },
+            color: undefined
+        };
+        const contentItem = {
+            label: 'Manage Content',
+            onPress: () => { onClose(); navigation.navigate('ContentManagement'); },
             color: undefined
         };
         
@@ -63,6 +66,13 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
         if (!menuItems.some(i => i.label === 'Manage Corporations')) {
             if (adminIndex !== -1) menuItems.splice(adminIndex + 1, 0, locItem);
             else menuItems.unshift(locItem);
+        }
+        
+        // Add Content Management
+        const locIndex = menuItems.findIndex(i => i.label === 'Manage Corporations');
+        if (!menuItems.some(i => i.label === 'Manage Content')) {
+            if (locIndex !== -1) menuItems.splice(locIndex + 1, 0, contentItem);
+            else menuItems.push(contentItem);
         }
     }
 

@@ -41,6 +41,11 @@ export class UsersService {
   }
 
 
+  async update(id: string, updateData: Partial<User>) {
+    await this.usersRepository.update(id, updateData);
+    return this.findOne(id);
+  }
+
   async updateResidence(userId: string, wardId: string, zoneId: string, corporationId: string) {
       const user = await this.usersRepository.findOne({ where: { id: userId } });
       if (!user) throw new Error('User not found');
@@ -61,7 +66,10 @@ export class UsersService {
   findOne(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ 
         where: { id },
-        relations: ['assigned_ward', 'assigned_corporation', 'assigned_zones', 'assigned_zones.wards'] 
+        relations: [
+            'assigned_ward', 'assigned_corporation', 'assigned_zones', 'assigned_zones.wards',
+            'residence_ward', 'residence_zone', 'residence_corporation'
+        ] 
     });
   }
 }
