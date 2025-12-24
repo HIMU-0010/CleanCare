@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../styles/theme';
 
 interface RatingModalProps {
   visible: boolean;
@@ -84,7 +85,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   content: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
@@ -92,11 +93,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 8,
+    color: '#111',
+    marginBottom: 5,
   },
   subtitle: {
-    color: '#AAA',
+    color: '#222',
     marginBottom: 20,
   },
   starsContainer: {
@@ -106,10 +107,10 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    backgroundColor: '#333',
+    backgroundColor: '#ddd',
     borderRadius: 8,
     padding: 12,
-    color: '#FFF',
+    color: '#111',
     textAlignVertical: 'top',
     height: 80,
     marginBottom: 20,
@@ -121,19 +122,18 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
+    backgroundColor: COLORS.cancel,
     padding: 14,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#444',
     alignItems: 'center',
   },
   cancelText: {
-    color: '#AAA',
+    color: COLORS.cancel_text,
     fontWeight: '600',
   },
   submitButton: {
     flex: 1,
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.primary,
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',

@@ -7,16 +7,6 @@ import { Role } from '../common/enums/role.enum';
 export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
 
-  @Post('seed')
-  seedAdmin() {
-    return this.adminsService.seedAdmin();
-  }
-
-  @Post('seed-full')
-  seedFullHierarchy() {
-    return this.adminsService.seedFullHierarchy();
-  }
-
   @Post('create')
   @UseGuards(AuthGuard('jwt')) 
   async createAdmin(

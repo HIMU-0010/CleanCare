@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request, UseInterceptors, UploadedFiles, Get, Param, Patch, Query } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, UseInterceptors, UploadedFiles, UploadedFile, Get, Param, Patch, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ComplaintsService } from './complaints.service';
@@ -63,11 +63,14 @@ export class ComplaintsController {
 
   @Patch(':id/status')
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FilesInterceptor('resolutionMedia', 5))
   async updateStatus(
     @Param('id') id: string,
     @Body('status') status: string,
+    @Body('resolutionDescription') resolutionDescription?: string,
+    @UploadedFiles() resolutionMedia?: Array<Express.Multer.File>,
   ) {
-    return this.complaintsService.updateStatus(id, status);
+    return this.complaintsService.updateStatus(id, status, resolutionMedia, resolutionDescription);
   }
 
   @Patch(':id/rate')

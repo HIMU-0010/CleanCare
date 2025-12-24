@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, Keyboard, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../styles/theme';
 import LocationSelector from '../../components/common/LocationSelector';
@@ -18,6 +18,21 @@ const SignupScreen = ({ navigation, route }: any) => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', (e) => {
+      setKeyboardOffset(e.endCoordinates.height);
+    });
+    const hideSubscription = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => {
+      setKeyboardOffset(0);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const isFormValid = name.trim().length > 0 && address.trim().length > 0 && wardId && zoneId && corpId && agreedToTerms;
 
@@ -78,7 +93,7 @@ const SignupScreen = ({ navigation, route }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { marginBottom: keyboardOffset }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Title removed since Header "Create Account" covers it? Or Keep it? 
             Screenshot shows only header. Let's keep "Complete Your Profile" as helper text 

@@ -9,9 +9,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MediaGallery } from '../../components/common/MediaGallery';
 
 import { COLORS } from '../../styles/theme';
+import { ResolutionDetailModal } from '../../components/complaint/ResolutionDetailModal';
 
 export const ComplaintDetailScreen = ({ route, navigation }: any) => {
   const { complaint } = route.params;
+  const [reportModalVisible, setReportModalVisible] = useState(false);
 
   // Mock Admin Contact Info (In real app, this comes from the assigned admin relation)
   const ADMIN_PHONE = '+8801700000000'; // Replace with real admin number
@@ -44,106 +46,129 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
 
   const handleRate = async (rating: number, review: string) => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
-        await axios.patch(`${API_URL}/complaints/${complaint.id}/rate`, 
-            { rating, review },
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-        Alert.alert('Success', 'Thank you for your feedback!');
-        complaint.rating = rating;
-        complaint.review = review; 
-        // Force update logic might be needed or navigation reload, but simple prop mutation works for immediate feedback if no state re-fetch
+      const token = await AsyncStorage.getItem('userToken');
+      await axios.patch(`${API_URL}/complaints/${complaint.id}/rate`,
+        { rating, review },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Alert.alert('Success', 'Thank you for your feedback!');
+      complaint.rating = rating;
+      complaint.review = review;
+      // Force update logic might be needed or navigation reload, but simple prop mutation works for immediate feedback if no state re-fetch
     } catch (error) {
-        Alert.alert('Error', 'Failed to submit rating');
+      Alert.alert('Error', 'Failed to submit rating');
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        
+
         {/* Header Image */}
         {/* Media Gallery */}
         <MediaGallery images={complaint.images} videos={complaint.videos} />
 
         <View style={styles.content}>
-            {/* Status Badge */}
-            <View style={styles.headerRow}>
-                <View style={[styles.badge, { backgroundColor: getStatusColor(complaint.status) }]}>
-                    <Text style={styles.statusText}>{complaint.status}</Text>
-                </View>
-                <Text style={styles.date}>{new Date(complaint.created_at).toLocaleDateString()}</Text>
+          {/* Status Badge */}
+          <View style={styles.headerRow}>
+            <View style={[styles.badge, { backgroundColor: getStatusColor(complaint.status) }]}>
+              <Text style={styles.statusText}>{complaint.status}</Text>
             </View>
+            <Text style={styles.date}>{new Date(complaint.created_at).toLocaleDateString()}</Text>
+          </View>
 
-            {/* Category and Subcategory Chips */}
-            <View style={styles.tagsContainer}>
-                <View style={styles.tagBadge}>
-                    <Text style={styles.tagText}>{complaint.category}</Text>
-                </View>
-                {complaint.sub_category ? (
-                    <View style={styles.tagBadgeOutline}>
-                        <Text style={styles.tagTextOutline}>{complaint.sub_category}</Text>
-                    </View>
-                ) : null}
+          {/* Category and Subcategory Chips */}
+          <View style={styles.tagsContainer}>
+            <View style={styles.tagBadge}>
+              <Text style={styles.tagText}>{complaint.category}</Text>
             </View>
-
-            {/* Description */}
-            <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.description}>{complaint.description}</Text>
-
-            {/* Location (Mocked address logic if raw coords) */}
-            <Text style={styles.sectionTitle}>Location</Text>
-            <Text style={styles.text}>
-                {complaint.address 
-                    ? complaint.address 
-                    : `Lat: ${complaint.latitude}, Long: ${complaint.longitude}`
-                }
-            </Text>
-
-            {/* Rating Section */}
-            {complaint.status === 'SOLVED' && (
-              <View style={styles.ratingSection}>
-                <Text style={styles.sectionTitle}>Your Feedback</Text>
-                {complaint.rating ? (
-                   <View style={styles.ratingDisplay}>
-                      <View style={{flexDirection:'row'}}>
-                        {[1, 2, 3, 4, 5].map(star => (
-                           <Ionicons 
-                              key={star} 
-                              name={star <= complaint.rating ? 'star' : 'star-outline'} 
-                              size={24} 
-                              color="#FFD700" 
-                           />
-                        ))}
-                      </View>
-                      {complaint.review ? <Text style={styles.reviewText}>{complaint.review}</Text> : null}
-                   </View>
-                ) : (
-                  <TouchableOpacity 
-                     style={styles.rateButton}
-                     onPress={() => setRatingModalVisible(true)}
-                  >
-                     <Text style={styles.rateButtonText}>Rate Service</Text>
-                  </TouchableOpacity>
-                )}
+            {complaint.sub_category ? (
+              <View style={styles.tagBadgeOutline}>
+                <Text style={styles.tagTextOutline}>{complaint.sub_category}</Text>
               </View>
-            )}
+            ) : null}
+          </View>
 
-            {/* Chat Buttons Section */}
-            <Text style={styles.sectionTitle}>Chat with Admin</Text>
-            <Text style={styles.hint}>Need to clarify something? Start a chat!</Text>
-            
-            <View style={styles.buttonRow}>
-                <TouchableOpacity style={[styles.chatButton, styles.whatsappButton]} onPress={openWhatsApp}>
-                    <Ionicons name="logo-whatsapp" size={24} color="white" />
-                    <Text style={styles.buttonText}>WhatsApp</Text>
-                </TouchableOpacity>
+          {/* Description */}
+          <View style={styles.descriptionContainer}>
+            <Text style={styles.descriptionLabel}>Description</Text>
+            <Text style={styles.descriptionValue}>{complaint.description}</Text>
+          </View>
 
-                <TouchableOpacity style={[styles.chatButton, styles.messengerButton]} onPress={openMessenger}>
-                    <Ionicons name="chatbubble" size={24} color="white" /> 
-                    <Text style={styles.buttonText}>Messenger</Text>
+          {/* Location Hierarchy */}
+          <View style={styles.locationContainer}>
+            <Text style={styles.locationLabel}>Location Details:</Text>
+            <Text style={styles.locationValue}>
+              {complaint.corporation?.name || 'N/A'} {'>'} {complaint.zone?.name ? `${complaint.zone.name} >` : ''} {complaint.ward?.name || 'N/A'}
+            </Text>
+            <Text style={styles.locationValue}>
+              {complaint.address
+                ? complaint.address
+                : `Lat: ${complaint.latitude}, Long: ${complaint.longitude}`
+              }
+            </Text>
+          </View>
+
+          {/* Rating Section */}
+          {complaint.status === 'SOLVED' && (
+            <View style={styles.RatingContainer}>
+              <Text style={styles.RatingLabel}>Your Feedback</Text>
+              {complaint.rating ? (
+                <View style={styles.ratingDisplay}>
+                  <View style={{ flexDirection: 'row' }}>
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <Ionicons
+                        key={star}
+                        name={star <= complaint.rating ? 'star' : 'star-outline'}
+                        size={24}
+                        color="#FFD700"
+                      />
+                    ))}
+                  </View>
+                  {complaint.review ? <Text style={styles.RatingValue}>{complaint.review}</Text> : null}
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.rateButton}
+                  onPress={() => setRatingModalVisible(true)}
+                >
+                  <Text style={styles.rateButtonText}>Rate Service</Text>
                 </TouchableOpacity>
+              )}
             </View>
+          )}
+
+
+          {/* Show Resolution Report Button if Solved or Rejected */}
+          {(complaint.status === 'SOLVED' || complaint.status === 'REJECTED') && (
+            <TouchableOpacity
+              style={[styles.reportButton, { backgroundColor: complaint.status === 'SOLVED' ? COLORS.primary : COLORS.error }]}
+              onPress={() => setReportModalVisible(true)}
+            >
+              <Ionicons name="document-text" size={20} color="white" style={{ marginRight: 8 }} />
+              <Text style={styles.reportButtonText}>
+                {complaint.status === 'SOLVED' ? 'View Resolution Report' : 'View Rejection Details'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Chat Buttons Section */}
+          <View style={styles.RatingContainer}>
+            <Text style={styles.RatingLabel}>Chat with Admin</Text>
+            <Text style={styles.RatingValue}>Need to clarify something? Start a chat!</Text>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={[styles.chatButton, styles.whatsappButton]} onPress={openWhatsApp}>
+                <Ionicons name="logo-whatsapp" size={24} color="white" />
+                <Text style={styles.buttonText}>WhatsApp</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.chatButton, styles.messengerButton]} onPress={openMessenger}>
+                <Ionicons name="logo-facebook" size={24} color="white" />
+                <Text style={styles.buttonText}>Messenger</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
       </ScrollView>
@@ -152,6 +177,15 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
         visible={ratingModalVisible}
         onClose={() => setRatingModalVisible(false)}
         onSubmit={handleRate}
+      />
+
+      <ResolutionDetailModal
+        visible={reportModalVisible}
+        onClose={() => setReportModalVisible(false)}
+        status={complaint.status}
+        resolutionImages={complaint.resolutionImages || (complaint.solution_image ? [complaint.solution_image] : [])} // Backwards compatibility if needed
+        resolutionVideos={complaint.resolutionVideos}
+        resolutionDescription={complaint.resolutionDescription}
       />
     </SafeAreaView>
   );
@@ -276,30 +310,117 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  RatingContainer: {
+    marginBottom: 15,
+    backgroundColor: '#f8f9fa',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  RatingLabel: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 4,
+  },
+  RatingValue: {
+    marginBottom: 10,
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
   ratingSection: {
-      marginTop: 20,
-      padding: 15,
-      backgroundColor: '#f9f9f9',
-      borderRadius: 10,
+    marginTop: 10,
+    padding: 15,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
   },
   rateButton: {
-      backgroundColor: '#007AFF',
-      padding: 12,
-      borderRadius: 8,
-      alignItems: 'center',
-      marginTop: 10,
+    backgroundColor: COLORS.primary,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
   },
   rateButtonText: {
-      color: 'white',
-      fontWeight: 'bold',
-      fontSize: 16,
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   ratingDisplay: {
-      marginTop: 5,
+    marginTop: 5,
   },
   reviewText: {
-      marginTop: 8,
-      fontStyle: 'italic',
-      color: '#555',
+    marginTop: 8,
+    fontStyle: 'italic',
+    color: '#555',
+  },
+  reportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 15,
+    elevation: 2,
+  },
+  reportButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  descriptionContainer: {
+    marginBottom: 15,
+    backgroundColor: '#f8f9fa',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  descriptionLabel: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 4,
+  },
+  descriptionValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  locationContainer: {
+    marginBottom: 15,
+    backgroundColor: '#f8f9fa',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  locationLabel: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 4,
+  },
+  locationValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  ChatContainer: {
+    marginBottom: 15,
+    backgroundColor: '#f8f9fa',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  ChatLabel: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 4,
+  },
+  ChatValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
 });

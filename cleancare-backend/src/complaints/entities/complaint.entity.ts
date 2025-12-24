@@ -79,8 +79,14 @@ export class Complaint {
   assigned_admin_id: string;
 
   // Rating & Solution
+  @Column('text', { array: true, default: [] })
+  resolutionImages: string[];
+
+  @Column('text', { array: true, default: [] })
+  resolutionVideos: string[];
+
   @Column({ type: 'text', nullable: true })
-  solution_image: string;
+  resolutionDescription: string;
 
   @Column({ type: 'int', nullable: true })
   rating: number; // 1-5

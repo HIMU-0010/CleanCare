@@ -51,16 +51,6 @@ export class FirebaseStrategy extends PassportStrategy(Strategy, 'firebase-jwt')
   }
 
   async validate(token: string) {
-    if (token === 'DEV_TEST_TOKEN') {
-      return {
-        uid: 'dev-user-id',
-        phone_number: '+8801700000000',
-        email: 'dev@cleancare.com',
-        // Mocking properties expected by AuthService
-        firebase: { sign_in_provider: 'custom' },
-      };
-    }
-
     try {
       console.log('Verifying token:', token.substring(0, 20) + '...');
       const firebaseUser = await firebase.auth().verifyIdToken(token, true);

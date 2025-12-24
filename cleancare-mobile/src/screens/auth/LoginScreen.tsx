@@ -165,47 +165,6 @@ export const LoginScreen = ({ navigation }: any) => {
                         </>
                     )}
                 </View>
-
-                {/* Dev Login Area - Kept discreet at bottom */}
-                <TouchableOpacity
-                    style={styles.devLink}
-                    onPress={async () => {
-                        try {
-                            setLoading(true);
-                            const { API_URL } = require('../../config/api');
-                            const axios = require('axios').default;
-                            const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-
-                            // Call backend with the magic DEV token
-                            const response = await axios.post(`${API_URL}/auth/login`, {}, {
-                                headers: { Authorization: 'Bearer DEV_TEST_TOKEN' }
-                            });
-
-                            const { accessToken, user } = response.data;
-                            if (accessToken) {
-                                await AsyncStorage.setItem('userToken', accessToken);
-                                await AsyncStorage.setItem('userProfile', JSON.stringify(user));
-                                if (user && user.role) {
-                                    await AsyncStorage.setItem('userRole', user.role);
-                                }
-
-                                if (user.role === 'WARD_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MASTER_ADMIN') {
-                                    navigation.replace('AdminDashboard');
-                                } else {
-                                    navigation.replace('CitizenHome');
-                                }
-                            } else {
-                                Alert.alert('Error', 'No token received from backend');
-                            }
-                        } catch (e: any) {
-                            Alert.alert('Dev Login Failed', e.message);
-                        } finally {
-                            setLoading(false);
-                        }
-                    }}
-                >
-                    <Text style={styles.devLinkText}>[DEV] Login as Test User</Text>
-                </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
     );
@@ -289,13 +248,5 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         textDecorationLine: 'underline',
-    },
-    devLink: {
-        marginTop: 40,
-        alignItems: 'center',
-    },
-    devLinkText: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontSize: 12,
     },
 });

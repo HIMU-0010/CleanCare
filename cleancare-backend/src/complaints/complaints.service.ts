@@ -82,6 +82,7 @@ export class ComplaintsService {
     return this.complaintsRepository.find({
       where: { user_id: user.id },
       order: { created_at: 'DESC' },
+      relations: ['ward', 'corporation', 'zone'],
     });
   }
 
@@ -92,12 +93,71 @@ export class ComplaintsService {
     });
   }
 
-  async updateStatus(id: string, status: string) {
-    // Validate status if needed
-    // const validStatuses = [ComplaintStatus.SUBMITTED, ComplaintStatus.PROCESSING, ComplaintStatus.SOLVED, ComplaintStatus.REJECTED];
-    // if (!validStatuses.includes(status as ComplaintStatus)) throw new BadRequestException('Invalid status');
+  async updateStatus(
+    id: string, 
+    status: string, 
+    resolutionMedia?: Array<Express.Multer.File>,
+    resolutionDescription?: string
+  ) {
+    // Check if complaint exists and get its current status
+    const complaint = await this.complaintsRepository.findOneBy({ id });
+    if (!complaint) {
+      throw new BadRequestException('Complaint not found');
+    }
 
-    await this.complaintsRepository.update(id, { status: status as ComplaintStatus });
+    // Prevent changing status if complaint is already SOLVED or REJECTED
+    if (complaint.status === ComplaintStatus.SOLVED || complaint.status === ComplaintStatus.REJECTED) {
+      throw new BadRequestException(`Cannot change status of ${complaint.status.toLowerCase()} complaints`);
+    }
+
+    // Validate that SOLVED status requires at least one resolution media file
+    if (status === ComplaintStatus.SOLVED && (!resolutionMedia || resolutionMedia.length === 0)) {
+      throw new BadRequestException('At least one resolution image or video is required when marking complaint as SOLVED');
+    }
+
+    // Validate that REJECTED status requires a rejection description
+    if (status === ComplaintStatus.REJECTED && !resolutionDescription) {
+      throw new BadRequestException('A rejection description is required when marking complaint as REJECTED');
+    }
+
+    const updateData: Partial<Complaint> = { 
+      status: status as ComplaintStatus 
+    };
+
+    // Upload resolution media to Cloudinary if provided
+    if (resolutionMedia && resolutionMedia.length > 0) {
+      const imageUrls: string[] = [];
+      const videoUrls: string[] = [];
+
+      for (const file of resolutionMedia) {
+        try {
+          const result = await this.cloudinaryService.uploadImage(file);
+          const url = (result as any).secure_url || (result as any).url;
+          
+          if (url) {
+            const isVideo = file.mimetype.startsWith('video/') || file.originalname.match(/\.(mp4|mov|avi|mkv)$/i);
+            if (isVideo) {
+              videoUrls.push(url);
+            } else {
+              imageUrls.push(url);
+            }
+          }
+        } catch (error) {
+          console.error('Resolution media upload failed', error);
+          throw new InternalServerErrorException('Failed to upload resolution media');
+        }
+      }
+
+      updateData.resolutionImages = imageUrls;
+      updateData.resolutionVideos = videoUrls;
+    }
+
+    // Add resolution description if provided
+    if (resolutionDescription) {
+      updateData.resolutionDescription = resolutionDescription;
+    }
+
+    await this.complaintsRepository.update(id, updateData);
     return this.complaintsRepository.findOneBy({ id });
   }
 
