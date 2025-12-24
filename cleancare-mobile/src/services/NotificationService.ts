@@ -57,7 +57,7 @@ class NotificationService {
         projectId: '6417da25-65e3-4e58-ba4c-49013a100f47', // From app.json
       });
 
-      console.log('Expo Push Token:', token.data);
+      // console.log('Expo Push Token:', token.data);
       return token.data;
     } catch (error) {
       console.error('Error getting push token:', error);
@@ -82,7 +82,7 @@ class NotificationService {
 
       // Register with backend
       await api.post('/notifications/register-token', { token });
-      console.log('Push token registered with backend');
+      // console.log('Push token registered with backend');
       return true;
     } catch (error) {
       console.error('Error registering push token:', error);
@@ -96,7 +96,7 @@ class NotificationService {
   async unregisterPushToken(): Promise<void> {
     try {
       await api.delete('/notifications/token');
-      console.log('Push token removed from backend');
+      // console.log('Push token removed from backend');
     } catch (error) {
       console.error('Error removing push token:', error);
     }

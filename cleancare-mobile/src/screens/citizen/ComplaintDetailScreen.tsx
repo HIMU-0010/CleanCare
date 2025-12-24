@@ -47,7 +47,6 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
           setLoading(false);
         }
       } else if (!complaint && !complaintId) {
-        console.error('No complaint object or ID provided');
         Alert.alert('Error', 'No complaint data found');
         navigation.goBack();
       }
