@@ -10,8 +10,7 @@ import { firebaseApp, firebaseConfig } from '../../config/firebase';
 // and ensure you have web credentials for the Firebase project.
 
 // Use Native Firebase Auth
-// @ts-ignore
-import auth from '@react-native-firebase/auth';
+import { getAuth, signInWithPhoneNumber, getIdToken } from '@react-native-firebase/auth';
 
 export const LoginScreen = ({ navigation }: any) => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -36,7 +35,8 @@ export const LoginScreen = ({ navigation }: any) => {
             }
 
             // signInWithPhoneNumber returns a confirmation object
-            const confirmation = await auth().signInWithPhoneNumber(formattedPhone);
+            const auth = getAuth();
+            const confirmation = await signInWithPhoneNumber(auth, formattedPhone);
             setConfirm(confirmation);
             Alert.alert('Verification code has been sent to your phone.');
         } catch (err: any) {
@@ -57,7 +57,7 @@ export const LoginScreen = ({ navigation }: any) => {
             // userCredential.user contains the user info.
 
             // Get ID token
-            const idToken = await userCredential.user.getIdToken();
+            const idToken = await getIdToken(userCredential.user);
 
             const { API_URL } = require('../../config/api');
             const axios = require('axios').default;
