@@ -11,7 +11,7 @@ const SignupScreen = ({ navigation, route }: any) => {
   const { phone, uid } = route.params || {}; // Passed from Login
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  
+
   const [wardId, setWardId] = useState<string | null>(null);
   const [zoneId, setZoneId] = useState<string | null>(null);
   const [corpId, setCorpId] = useState<string | null>(null);
@@ -51,12 +51,12 @@ const SignupScreen = ({ navigation, route }: any) => {
       // If the token expired, we might need to re-auth. 
       // For simplification, let's assume `route.params` has a valid `idToken`.
       const idToken = route.params?.idToken;
-      
+
       if (!idToken) {
-          Alert.alert('Error', 'Authentication failed. Please login again.');
-          navigation.replace('Login');
-          return;
-      } 
+        Alert.alert('Error', 'Authentication failed. Please login again.');
+        navigation.replace('Login');
+        return;
+      }
 
       const response = await axios.post(
         `${API_URL}/auth/register`,
@@ -81,7 +81,14 @@ const SignupScreen = ({ navigation, route }: any) => {
       await AsyncStorage.setItem('userProfile', JSON.stringify(user));
       await AsyncStorage.setItem('userRole', 'USER'); // Ensure role is saved too if needed
 
-      
+      // Register push notification token
+      try {
+        const NotificationService = require('../../services/NotificationService').default;
+        await NotificationService.registerPushToken();
+      } catch (notifError) {
+        console.log('Non-critical: Failed to register push token:', notifError);
+      }
+
       Alert.alert('Success', 'Account created successfully!');
       navigation.replace('CitizenHome');
     } catch (error: any) {
@@ -134,25 +141,25 @@ const SignupScreen = ({ navigation, route }: any) => {
 
         {/* TnC Section */}
         <View style={styles.tncContainer}>
-            <TouchableOpacity 
-                style={styles.checkboxContainer} 
-                onPress={() => setAgreedToTerms(!agreedToTerms)}
-            >
-                <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
-                    {agreedToTerms && <View style={styles.checkboxInner} />}
-                </View>
-            </TouchableOpacity>
-            <Text style={styles.tncText}>
-                I agree to the <Text style={{fontWeight: 'bold', color: COLORS.primary}} onPress={() => navigation.navigate('TermsAndConditions')}>Terms & Conditions</Text>
-                {/* I agree to the <Text style={{fontWeight: 'bold', color: COLORS.primary}} onPress={() => navigation.navigate('TermsAndConditions')}>Terms & Conditions</Text> and <Text style={{fontWeight: 'bold'}}>Privacy Policy</Text> */}
-            </Text>
+          <TouchableOpacity
+            style={styles.checkboxContainer}
+            onPress={() => setAgreedToTerms(!agreedToTerms)}
+          >
+            <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+              {agreedToTerms && <View style={styles.checkboxInner} />}
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.tncText}>
+            I agree to the <Text style={{ fontWeight: 'bold', color: COLORS.primary }} onPress={() => navigation.navigate('TermsAndConditions')}>Terms & Conditions</Text>
+            {/* I agree to the <Text style={{fontWeight: 'bold', color: COLORS.primary}} onPress={() => navigation.navigate('TermsAndConditions')}>Terms & Conditions</Text> and <Text style={{fontWeight: 'bold'}}>Privacy Policy</Text> */}
+          </Text>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
-              styles.button, 
-              (!isFormValid || loading) && styles.disabledButton // Disable style if form invalid logic
-          ]} 
+            styles.button,
+            (!isFormValid || loading) && styles.disabledButton // Disable style if form invalid logic
+          ]}
           onPress={handleSignup}
           disabled={!isFormValid || loading}
         >
@@ -209,37 +216,37 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   tncContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 20,
-      marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
   },
   checkboxContainer: {
-      paddingRight: 10,
+    paddingRight: 10,
   },
   checkbox: {
-      width: 24,
-      height: 24,
-      borderWidth: 2,
-      borderColor: '#ccc',
-      borderRadius: 4,
-      justifyContent: 'center',
-      alignItems: 'center',
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkboxChecked: {
-      borderColor: '#3FA564',
-      backgroundColor: '#fff', 
+    borderColor: '#3FA564',
+    backgroundColor: '#fff',
   },
   checkboxInner: {
-      width: 14,
-      height: 14,
-      backgroundColor: '#3FA564',
-      borderRadius: 2,
+    width: 14,
+    height: 14,
+    backgroundColor: '#3FA564',
+    borderRadius: 2,
   },
   tncText: {
-      fontSize: 14,
-      color: '#333',
-      flex: 1, // Wrap text
+    fontSize: 14,
+    color: '#333',
+    flex: 1, // Wrap text
   },
   button: {
     backgroundColor: '#3FA564',

@@ -61,6 +61,12 @@ export class ComplaintsController {
     });
   }
 
+  @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async findOne(@Param('id') id: string) {
+    return this.complaintsService.findOne(id);
+  }
+
   @Patch(':id/status')
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FilesInterceptor('resolutionMedia', 5))

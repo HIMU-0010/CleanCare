@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
@@ -23,14 +23,15 @@ import { CreateAdminScreen } from '../screens/admin/CreateAdminScreen';
 import { AdminDetailScreen } from '../screens/admin/AdminDetailScreen';
 import { ManageCorporationsScreen } from '../screens/admin/ManageCorporationsScreen';
 import { CreateCorporationScreen } from '../screens/admin/CreateCorporationScreen';
+import { NotificationListScreen } from '../screens/NotificationListScreen';
 
 const Stack = createNativeStackNavigator();
 
 import { COLORS } from '../styles/theme';
 
-export const RootNavigator = () => {
+export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, {}>((props, ref) => {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={ref}>
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{
@@ -51,6 +52,7 @@ export const RootNavigator = () => {
         <Stack.Screen name="NewComplaint" component={NewComplaintScreen} options={{ title: 'Report Issue' }} />
         <Stack.Screen name="ComplaintList" component={ComplaintListScreen} options={{ title: 'My Complaints' }} />
         <Stack.Screen name="ComplaintDetail" component={ComplaintDetailScreen} options={{ title: 'Details' }} />
+        <Stack.Screen name="NotificationList" component={NotificationListScreen} options={{ title: 'Notifications' }} />
 
         {/* Content Management Screens */}
         <Stack.Screen
@@ -83,4 +85,4 @@ export const RootNavigator = () => {
       </Stack.Navigator>
     </NavigationContainer>
   );
-};
+});

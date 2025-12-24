@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Linking, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { RatingModal } from '../../components/complaint/RatingModal';
@@ -12,8 +12,49 @@ import { COLORS } from '../../styles/theme';
 import { ResolutionDetailModal } from '../../components/complaint/ResolutionDetailModal';
 
 export const ComplaintDetailScreen = ({ route, navigation }: any) => {
-  const { complaint } = route.params;
+  const { complaint: initialComplaint, complaintId } = route.params;
+  const [complaint, setComplaint] = useState(initialComplaint);
+  const [loading, setLoading] = useState(!initialComplaint);
   const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
+
+  // Fetch complaint if only ID is provided
+  React.useEffect(() => {
+    const fetchComplaint = async () => {
+      console.log('Fetching complaint details for ID:', complaintId);
+      console.log('Initial complaint params:', initialComplaint);
+
+      if (!complaint && complaintId) {
+        try {
+          const token = await AsyncStorage.getItem('userToken');
+          const url = `${API_URL}/complaints/${complaintId}`;
+          console.log('Requesting URL:', url);
+
+          const response = await axios.get(url, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          console.log('Complaint loaded successfully');
+          setComplaint(response.data);
+        } catch (error: any) {
+          console.error('Error fetching complaint:', error);
+          if (error.response) {
+            console.error('Error Status:', error.response.status);
+            console.error('Error Data:', error.response.data);
+          }
+          Alert.alert('Error', `Failed to load complaint details: ${error.message}`);
+          navigation.goBack();
+        } finally {
+          setLoading(false);
+        }
+      } else if (!complaint && !complaintId) {
+        console.error('No complaint object or ID provided');
+        Alert.alert('Error', 'No complaint data found');
+        navigation.goBack();
+      }
+    };
+
+    fetchComplaint();
+  }, [complaintId, complaint]);
 
   // Mock Admin Contact Info (In real app, this comes from the assigned admin relation)
   const ADMIN_PHONE = '+8801700000000'; // Replace with real admin number
@@ -42,8 +83,6 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
-  const [ratingModalVisible, setRatingModalVisible] = useState(false);
-
   const handleRate = async (rating: number, review: string) => {
     try {
       const token = await AsyncStorage.getItem('userToken');
@@ -52,13 +91,21 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       Alert.alert('Success', 'Thank you for your feedback!');
-      complaint.rating = rating;
-      complaint.review = review;
-      // Force update logic might be needed or navigation reload, but simple prop mutation works for immediate feedback if no state re-fetch
+      setComplaint((prev: any) => ({ ...prev, rating, review }));
     } catch (error) {
       Alert.alert('Error', 'Failed to submit rating');
     }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!complaint) return null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -195,6 +242,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scroll: {
     paddingBottom: 40,

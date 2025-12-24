@@ -80,6 +80,14 @@ export const LoginScreen = ({ navigation }: any) => {
                     await AsyncStorage.setItem('userRole', user.role);
                 }
 
+                // Register push notification token
+                try {
+                    const NotificationService = require('../../services/NotificationService').default;
+                    await NotificationService.registerPushToken();
+                } catch (notifError) {
+                    console.log('Non-critical: Failed to register push token:', notifError);
+                }
+
                 if (user.role === 'WARD_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MASTER_ADMIN') {
                     navigation.replace('AdminDashboard');
                 } else {

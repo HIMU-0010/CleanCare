@@ -9,6 +9,7 @@ import { ComplaintsModule } from './complaints/complaints.module';
 import { AdminsModule } from './admins/admins.module';
 import { LocationsModule } from './locations/locations.module';
 import { ContentModule } from './content/content.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ContentModule } from './content/content.module';
     AdminsModule,
     LocationsModule,
     ContentModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

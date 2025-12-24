@@ -6,6 +6,7 @@ import { CreateComplaintDto } from './dto/create-complaint.dto';
 import { User } from '../users/entities/user.entity';
 import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 import { ComplaintStatus } from '../common/enums/complaint-status.enum';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ComplaintsService {
@@ -13,6 +14,7 @@ export class ComplaintsService {
     @InjectRepository(Complaint)
     private complaintsRepository: Repository<Complaint>,
     private cloudinaryService: CloudinaryService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createComplaintDto: CreateComplaintDto, user: User, files: Array<Express.Multer.File>) {
@@ -68,7 +70,23 @@ export class ComplaintsService {
       corporation_id: corpId,
     });
 
-    return this.complaintsRepository.save(complaint);
+    const savedComplaint = await this.complaintsRepository.save(complaint);
+
+    // Fetch full complaint with relations to send notification
+    try {
+        const fullComplaint = await this.complaintsRepository.findOne({
+            where: { id: savedComplaint.id },
+            relations: ['ward', 'zone', 'corporation'],
+        });
+        
+        if (fullComplaint) {
+            await this.notificationsService.sendNewComplaintNotification(fullComplaint);
+        }
+    } catch (error) {
+        console.error('Failed to send admin notification', error);
+    }
+
+    return savedComplaint;
   }
 
   async findLatest() {
@@ -91,6 +109,17 @@ export class ComplaintsService {
       where: { ward_id: wardId },
       order: { created_at: 'DESC' },
     });
+  }
+
+  async findOne(id: string) {
+    const complaint = await this.complaintsRepository.findOne({
+      where: { id },
+      relations: ['ward', 'corporation', 'zone'],
+    });
+    if (!complaint) {
+      throw new BadRequestException('Complaint not found');
+    }
+    return complaint;
   }
 
   async updateStatus(
@@ -158,7 +187,24 @@ export class ComplaintsService {
     }
 
     await this.complaintsRepository.update(id, updateData);
-    return this.complaintsRepository.findOneBy({ id });
+    const updatedComplaint = await this.complaintsRepository.findOneBy({ id });
+    
+    // Send push notification to complaint owner
+    if (updatedComplaint && (status === ComplaintStatus.PROCESSING || status === ComplaintStatus.SOLVED || status === ComplaintStatus.REJECTED)) {
+      try {
+        await this.notificationsService.sendComplaintStatusUpdate(
+          updatedComplaint.user_id,
+          updatedComplaint.id,
+          status,
+          updatedComplaint.category,
+        );
+      } catch (error) {
+        // Log error but don't fail the status update
+        console.error('Failed to send notification:', error);
+      }
+    }
+    
+    return updatedComplaint;
   }
 
   async rateComplaint(id: string, rating: number, review: string, userId: string) {

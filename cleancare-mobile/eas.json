@@ -1,4 +1,4 @@
-{
+﻿{
   "cli": {
     "version": ">= 16.28.0",
     "appVersionSource": "remote"
@@ -18,7 +18,10 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://208377d2f001.ngrok-free.app"
+      }
     }
   },
   "submit": {

@@ -80,6 +80,12 @@ export class User {
   @Column({ nullable: true })
   residence_corporation_id: string;
 
+  @Column({ nullable: true })
+  push_token: string;
+
+  @Column({ nullable: true })
+  push_token_updated_at: Date;
+
   @Column({ type: 'boolean', default: true })
   is_active: boolean;
 

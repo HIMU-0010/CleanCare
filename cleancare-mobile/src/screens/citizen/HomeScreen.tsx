@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Sidebar, HamburgerButton } from '../../components/common/Sidebar';
+import { NotificationBell } from '../../components/common/NotificationBell';
 
 export const HomeScreen = ({ navigation }: any) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -17,9 +18,12 @@ export const HomeScreen = ({ navigation }: any) => {
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <HamburgerButton 
-          onPress={() => setSidebarOpen(prev => !prev)}
-        />
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <NotificationBell onPress={() => navigation.navigate('NotificationList')} />
+          <HamburgerButton
+            onPress={() => setSidebarOpen(prev => !prev)}
+          />
+        </View>
       ),
     });
   }, [navigation]);
@@ -34,19 +38,19 @@ export const HomeScreen = ({ navigation }: any) => {
       // If token is missing, might redirect to login, but let's just try to load from storage first
       // or fetch if possible.
       if (token) {
-          try {
-             // Fetch fresh profile
-             const profileRes = await axios.get(`${API_URL}/auth/profile`, {
-               headers: { Authorization: `Bearer ${token}` }
-             });
-             const profile = profileRes.data;
-             setUserName(profile.name || '');
-             // Update local storage
-             await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
-             return;
-          } catch (e) {
-             console.log('Failed to fetch profile, using cached', e);
-          }
+        try {
+          // Fetch fresh profile
+          const profileRes = await axios.get(`${API_URL}/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const profile = profileRes.data;
+          setUserName(profile.name || '');
+          // Update local storage
+          await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
+          return;
+        } catch (e) {
+          console.log('Failed to fetch profile, using cached', e);
+        }
       }
 
       // Fallback to cached
@@ -72,8 +76,8 @@ export const HomeScreen = ({ navigation }: any) => {
       onPress: () => navigation.navigate('ComplaintList'),
     },
     {
-        label: 'My Profile',
-        onPress: () => navigation.navigate('Profile'),
+      label: 'My Profile',
+      onPress: () => navigation.navigate('Profile'),
     },
     {
       label: 'Emergency Contacts',
@@ -114,7 +118,7 @@ export const HomeScreen = ({ navigation }: any) => {
           </Text>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.reportButton}
           onPress={() => navigation.navigate('NewComplaint')}
         >
