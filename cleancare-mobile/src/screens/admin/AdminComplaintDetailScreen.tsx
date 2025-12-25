@@ -245,6 +245,16 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
               </View>
             ) : null}
           </View>
+
+          {/* UUID Display */}
+          <View style={styles.descriptionContainer}>
+            <View style={{ paddingHorizontal: 10, paddingBottom: 2 }}>
+              <Text style={styles.descriptionLabel}>Complaint ID:</Text>
+              <Text style={styles.uuidText} selectable={true}>{complaint.id}</Text>
+            </View>
+          </View>
+
+
           <View style={styles.descriptionContainer}>
             <Text style={styles.descriptionLabel}>Description:</Text>
             <Text style={styles.descriptionValue}>{complaint.description}</Text>
@@ -566,6 +576,13 @@ const styles = StyleSheet.create({
   date: {
     color: 'gray',
     fontSize: 12,
+  },
+  uuidText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 4,
+    fontFamily: 'monospace',
   },
   sectionTitle: {
     fontSize: 18,

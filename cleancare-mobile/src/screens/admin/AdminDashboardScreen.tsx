@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Image, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
@@ -50,6 +50,9 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
 
   // For Super Admin - their assigned zones
   const [assignedZones, setAssignedZones] = useState<any[]>([]);
+
+  /* Search State */
+  const [searchQuery, setSearchQuery] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -397,45 +400,72 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
       <View style={{ flex: 1, position: 'relative', backgroundColor: '#f5f5f5' }}>
         {renderFilters()}
 
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{complaints.length}</Text>
-            <Text style={styles.statLabel}>Total</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumber, { color: '#6c757d' }]}>
-              {complaints.filter(c => c.status === 'SUBMITTED').length}
-            </Text>
-            <Text style={styles.statLabel}>Pending</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumber, { color: '#fd7e14' }]}>
-              {complaints.filter(c => c.status === 'PROCESSING').length}
-            </Text>
-            <Text style={styles.statLabel}>Processing</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumber, { color: '#28a745' }]}>
-              {complaints.filter(c => c.status === 'SOLVED').length}
-            </Text>
-            <Text style={styles.statLabel}>Solved</Text>
-          </View>
+        {/* Search Input */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by Complaint ID"
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color="#999" />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {loading ? (
-          <ActivityIndicator size="large" style={{ marginTop: 50 }} />
-        ) : (
-          <FlatList
-            data={complaints}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={
-              <Text style={styles.empty}>No complaints found.</Text>
-            }
-          />
-        )}
+        {/* Stats */}
+        {(() => {
+          const filteredComplaints = complaints.filter(c =>
+            c.id.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+
+          return (
+            <>
+              <View style={styles.statsRow}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statNumber}>{filteredComplaints.length}</Text>
+                  <Text style={styles.statLabel}>Total</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={[styles.statNumber, { color: '#6c757d' }]}>
+                    {filteredComplaints.filter(c => c.status === 'SUBMITTED').length}
+                  </Text>
+                  <Text style={styles.statLabel}>Pending</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={[styles.statNumber, { color: '#fd7e14' }]}>
+                    {filteredComplaints.filter(c => c.status === 'PROCESSING').length}
+                  </Text>
+                  <Text style={styles.statLabel}>Processing</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={[styles.statNumber, { color: '#28a745' }]}>
+                    {filteredComplaints.filter(c => c.status === 'SOLVED').length}
+                  </Text>
+                  <Text style={styles.statLabel}>Solved</Text>
+                </View>
+              </View>
+
+              {loading ? (
+                <ActivityIndicator size="large" style={{ marginTop: 50 }} />
+              ) : (
+                <FlatList
+                  data={filteredComplaints}
+                  keyExtractor={(item) => item.id}
+                  renderItem={renderItem}
+                  contentContainerStyle={styles.list}
+                  ListEmptyComponent={
+                    <Text style={styles.empty}>No complaints found.</Text>
+                  }
+                />
+              )}
+            </>
+          );
+        })()}
 
         <Sidebar
           isOpen={sidebarOpen}
@@ -605,5 +635,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
     marginTop: 6, // Matches image marginTop
     borderRadius: 8,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    margin: 0,
+    marginBottom: 8,
+    marginHorizontal: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#333',
   },
 });

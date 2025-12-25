@@ -117,10 +117,14 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
         <View style={styles.content}>
           {/* Status Badge */}
           <View style={styles.headerRow}>
-            <View style={[styles.badge, { backgroundColor: getStatusColor(complaint.status) }]}>
-              <Text style={styles.statusText}>{complaint.status}</Text>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={[styles.badge, { backgroundColor: getStatusColor(complaint.status) }]}>
+                  <Text style={styles.statusText}>{complaint.status}</Text>
+                </View>
+                <Text style={styles.date}>{new Date(complaint.created_at).toLocaleDateString()}</Text>
+              </View>
             </View>
-            <Text style={styles.date}>{new Date(complaint.created_at).toLocaleDateString()}</Text>
           </View>
 
           {/* Category and Subcategory Chips */}
@@ -135,9 +139,17 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
             ) : null}
           </View>
 
+          {/* UUID Display */}
+          <View style={styles.descriptionContainer}>
+            <View style={{ paddingHorizontal: 10, paddingBottom: 2 }}>
+              <Text style={styles.descriptionLabel}>Complaint ID:</Text>
+              <Text style={styles.uuidText} selectable={true}>{complaint.id}</Text>
+            </View>
+          </View>
+
           {/* Description */}
           <View style={styles.descriptionContainer}>
-            <Text style={styles.descriptionLabel}>Description</Text>
+            <Text style={styles.descriptionLabel}>Description:</Text>
             <Text style={styles.descriptionValue}>{complaint.description}</Text>
           </View>
 
@@ -314,6 +326,13 @@ const styles = StyleSheet.create({
   date: {
     color: 'gray',
     fontSize: 12,
+  },
+  uuidText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 4,
+    fontFamily: 'monospace',
   },
   sectionTitle: {
     fontSize: 18,
