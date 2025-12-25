@@ -58,7 +58,7 @@ export const ManageGalleryScreen = ({ navigation }: any) => {
 
     const pickImages = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: 'images',
             allowsMultipleSelection: true,
             quality: 0.7,
         });
@@ -158,13 +158,13 @@ export const ManageGalleryScreen = ({ navigation }: any) => {
                 <Text style={styles.imageCount}>{item.images?.length || 0} images</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <TouchableOpacity onPress={() => openEditModal(item)} style={[styles.actionBtn, { backgroundColor: '#4CD964', marginRight: 8 }]}>
-                      <Text style={{ color: 'white', fontWeight: 'bold' }}>✎</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(item.id)} style={[styles.actionBtn, { backgroundColor: '#ff4d4d' }]}>
-                      <Text style={{ color: 'white', fontWeight: 'bold' }}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
+                <TouchableOpacity onPress={() => openEditModal(item)} style={[styles.actionBtn, { backgroundColor: '#4CD964', marginRight: 8 }]}>
+                    <Text style={{ color: 'white', fontWeight: 'bold' }}>✎</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id)} style={[styles.actionBtn, { backgroundColor: '#ff4d4d' }]}>
+                    <Text style={{ color: 'white', fontWeight: 'bold' }}>✕</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 

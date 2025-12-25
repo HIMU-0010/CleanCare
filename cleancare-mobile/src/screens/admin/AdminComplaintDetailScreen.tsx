@@ -73,7 +73,7 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
     }
 
     const result = await launchImageLibraryAsync({
-      mediaTypes: 'All' as any,
+      mediaTypes: ['images', 'videos'] as any,
       allowsMultipleSelection: true,
       allowsEditing: false,
       quality: 0.7,

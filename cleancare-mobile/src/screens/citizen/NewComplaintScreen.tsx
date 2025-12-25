@@ -40,7 +40,7 @@ export const NewComplaintScreen = ({ navigation }: any) => {
     }
 
     let result = await launchImageLibraryAsync({
-      mediaTypes: 'All' as any, // Cast to any to avoid type mismatch if strictly typed
+      mediaTypes: ['images', 'videos'] as any,
       allowsMultipleSelection: true,
       allowsEditing: false, // Editing not supported for multiple/video usually
       quality: 0.7,
