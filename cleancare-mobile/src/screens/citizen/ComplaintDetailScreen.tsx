@@ -21,19 +21,19 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
   // Fetch complaint if only ID is provided
   React.useEffect(() => {
     const fetchComplaint = async () => {
-      console.log('Fetching complaint details for ID:', complaintId);
-      console.log('Initial complaint params:', initialComplaint);
+      // console.log('Fetching complaint details for ID:', complaintId);
+      // console.log('Initial complaint params:', initialComplaint);
 
       if (!complaint && complaintId) {
         try {
           const token = await AsyncStorage.getItem('userToken');
           const url = `${API_URL}/complaints/${complaintId}`;
-          console.log('Requesting URL:', url);
+          // console.log('Requesting URL:', url);
 
           const response = await axios.get(url, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          console.log('Complaint loaded successfully');
+          // console.log('Complaint loaded successfully');
           setComplaint(response.data);
         } catch (error: any) {
           console.error('Error fetching complaint:', error);

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import NotificationService from './src/services/NotificationService';
+import NotificationEvents from './src/utils/NotificationEvents';
 import * as Notifications from 'expo-notifications';
 import { NavigationContainerRef } from '@react-navigation/native';
 
@@ -16,12 +17,13 @@ export default function App() {
     NotificationService.setupNotificationListeners(
       (notification) => {
         // Handle notification received while app is foregrounded
-        console.log('Foreground notification:', notification);
+        // Trigger badge refresh
+        NotificationEvents.emitBadgeRefresh();
       },
       (response) => {
         // Handle notification tap
         const data = response.notification.request.content.data;
-        console.log('Notification tapped, data:', data);
+        // console.log('Notification tapped, data:', data);
 
         // Deep link to complaint detail screen if complaint notification
         if (data.type === 'complaint_status_update' && data.complaintId) {

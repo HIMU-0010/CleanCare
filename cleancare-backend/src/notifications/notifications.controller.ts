@@ -59,4 +59,11 @@ export class NotificationsController {
     await this.notificationsService.markAllAsRead(req.user.id);
     return { message: 'All notifications marked as read' };
   }
+
+  @Post('mark-by-complaint/:complaintId')
+  @HttpCode(HttpStatus.OK)
+  async markByComplaint(@Request() req, @Param('complaintId') complaintId: string) {
+    await this.notificationsService.markByComplaintId(req.user.id, complaintId);
+    return { message: 'Notification marked as read' };
+  }
 }

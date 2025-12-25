@@ -13,22 +13,53 @@ import { Ionicons } from '@expo/vector-icons';
 const STATUS_OPTIONS = ['PROCESSING', 'SOLVED', 'REJECTED'];
 
 export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
-  const { complaint } = route.params;
-  const [status, setStatus] = useState(complaint.status);
+  const { complaint: initialComplaint, complaintId } = route.params;
+  const [complaint, setComplaint] = useState(initialComplaint);
+  const [status, setStatus] = useState(initialComplaint?.status);
   const [updating, setUpdating] = useState(false);
+  const [loading, setLoading] = useState(!initialComplaint);
   const [modalVisible, setModalVisible] = useState(false);
   const [resolutionModalVisible, setResolutionModalVisible] = useState(false);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [resolutionMedia, setResolutionMedia] = useState<any[]>([]);
   const [resolutionDescription, setResolutionDescription] = useState('');
   const [isCameraVisible, setIsCameraVisible] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<string>('SOLVED'); // Track whether we're solving or rejecting
+  const [pendingStatus, setPendingStatus] = useState<string>('SOLVED');
+
+  // Fetch complaint if only ID is provided
+  React.useEffect(() => {
+    const fetchComplaint = async () => {
+      if (!complaint && complaintId) {
+        try {
+          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+          const token = await AsyncStorage.getItem('userToken');
+          const url = `${API_URL}/complaints/${complaintId}`;
+
+          const response = await axios.get(url, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setComplaint(response.data);
+          setStatus(response.data.status);
+        } catch (error: any) {
+          Alert.alert('Error', `Failed to load complaint details: ${error.message}`);
+          navigation.goBack();
+        } finally {
+          setLoading(false);
+        }
+      } else if (!complaint && !complaintId) {
+        Alert.alert('Error', 'No complaint data found');
+        navigation.goBack();
+      } else {
+        setLoading(false);
+      }
+    };
+    fetchComplaint();
+  }, [complaintId, complaint]);
 
   const handleStatusSelection = (newStatus: string) => {
     if (newStatus === 'SOLVED' || newStatus === 'REJECTED') {
       setModalVisible(false);
       setResolutionModalVisible(true);
-      // Store the selected status to use in submission
       setPendingStatus(newStatus);
     } else {
       updateStatus(newStatus);
@@ -170,6 +201,16 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
       default: return 'gray';
     }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!complaint) return null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -410,6 +451,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   reportButton: {
     flexDirection: 'row',

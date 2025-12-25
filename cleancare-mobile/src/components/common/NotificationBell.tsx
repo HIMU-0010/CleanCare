@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import NotificationService from '../../services/NotificationService';
+import NotificationEvents from '../../utils/NotificationEvents';
 import { COLORS } from '../../styles/theme';
 
 interface NotificationBellProps {
@@ -11,20 +13,31 @@ interface NotificationBellProps {
 
 export const NotificationBell: React.FC<NotificationBellProps> = ({ onPress, color = '#fff' }) => {
     const [unreadCount, setUnreadCount] = useState(0);
+    const navigation = useNavigation();
+
+    const fetchUnreadCount = async () => {
+        const count = await NotificationService.getUnreadCount();
+        setUnreadCount(count);
+    };
 
     useEffect(() => {
-        const fetchUnreadCount = async () => {
-            const count = await NotificationService.getUnreadCount();
-            setUnreadCount(count);
-        };
-
         fetchUnreadCount();
 
         // Refresh every 30 seconds
         const interval = setInterval(fetchUnreadCount, 30000);
 
-        return () => clearInterval(interval);
-    }, []);
+        // Refresh when screen comes into focus
+        const unsubscribe = navigation.addListener('focus', fetchUnreadCount);
+
+        // Refresh when new notification arrives in foreground
+        NotificationEvents.onBadgeRefresh(fetchUnreadCount);
+
+        return () => {
+            clearInterval(interval);
+            unsubscribe();
+            NotificationEvents.removeBadgeRefreshListener(fetchUnreadCount);
+        };
+    }, [navigation]);
 
     return (
         <TouchableOpacity onPress={onPress} style={styles.container}>

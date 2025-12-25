@@ -51,8 +51,32 @@ export const NotificationListScreen = ({ navigation }: any) => {
         }
 
         // Handle navigation based on notification type
-        if (notification.type === 'COMPLAINT_STATUS_UPDATE' && notification.data?.complaintId) {
-            navigation.navigate('ComplaintDetail', {
+        if (notification.data?.complaintId) {
+            let targetScreen = 'ComplaintDetail';
+
+            // Use notification type to determine destination
+            if (notification.type === 'SYSTEM' && notification.title === 'New Complaint Submitted') {
+                // This is an admin notification
+                targetScreen = 'AdminComplaintDetail';
+            } else if (notification.type === 'COMPLAINT_STATUS_UPDATE') {
+                // This is a citizen notification
+                targetScreen = 'ComplaintDetail';
+            } else {
+                // Fallback: Check user role
+                try {
+                    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+                    const profileStr = await AsyncStorage.getItem('userProfile');
+                    if (profileStr) {
+                        const profile = JSON.parse(profileStr);
+                        const isAdmin = profile.role === 'WARD_ADMIN' || profile.role === 'SUPER_ADMIN' || profile.role === 'MASTER_ADMIN';
+                        if (isAdmin) targetScreen = 'AdminComplaintDetail';
+                    }
+                } catch (e) {
+                    console.error("Error checking role:", e);
+                }
+            }
+
+            navigation.navigate(targetScreen, {
                 complaintId: notification.data.complaintId,
             });
         }

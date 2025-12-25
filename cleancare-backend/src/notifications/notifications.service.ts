@@ -175,6 +175,17 @@ export class NotificationsService {
     );
   }
 
+  async markByComplaintId(userId: string, complaintId: string): Promise<void> {
+    await this.notificationRepository
+      .createQueryBuilder()
+      .update()
+      .set({ read: true, read_at: new Date() })
+      .where('user_id = :userId', { userId })
+      .andWhere("data->>'complaintId' = :complaintId", { complaintId })
+      .andWhere('read = :read', { read: false })
+      .execute();
+  }
+
   /**
    * Get unread notification count
    */
@@ -275,7 +286,7 @@ export class NotificationsService {
     const statusMessages = {
       PROCESSING: 'Your complaint is now being addressed',
       SOLVED: 'Your complaint has been resolved',
-      REJECTED: 'Your complaint has been reviewed',
+      REJECTED: 'Your complaint has been reviewed and rejected',
     };
 
     const payload: PushNotificationPayload = {
@@ -341,7 +352,7 @@ export class NotificationsService {
 
     const payload: PushNotificationPayload = {
       title: 'New Complaint Submitted',
-      body: `A new complaint has been reported in Ward ${complaint.ward?.name || 'Unknown'}`,
+      body: `New complaint in ${complaint.corporation?.name || 'Unknown'} > ${complaint.zone?.name || 'Unknown'} > ${complaint.ward?.name || 'Unknown'}`,
       data: {
         type: 'new_complaint',
         complaintId: complaint.id,

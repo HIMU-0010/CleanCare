@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { api } from '../config/api';
 
 // Configure notification handler for foreground notifications
@@ -54,7 +55,7 @@ class NotificationService {
       }
 
       const token = await Notifications.getExpoPushTokenAsync({
-        projectId: '6417da25-65e3-4e58-ba4c-49013a100f47', // From app.json
+        projectId: Constants.expoConfig?.extra?.eas?.projectId,
       });
 
       // console.log('Expo Push Token:', token.data);
@@ -113,7 +114,7 @@ class NotificationService {
   ): void {
     // Listen for notifications received while app is foregrounded
     this.notificationListener = Notifications.addNotificationReceivedListener((notification) => {
-      console.log('Notification received:', notification);
+      // console.log('Notification received:', notification);
       if (onNotificationReceived) {
         onNotificationReceived(notification);
       }
@@ -121,7 +122,7 @@ class NotificationService {
 
     // Listen for when user taps on notification
     this.responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
-      console.log('Notification tapped:', response);
+      // console.log('Notification tapped:', response);
       if (onNotificationTapped) {
         onNotificationTapped(response);
       }

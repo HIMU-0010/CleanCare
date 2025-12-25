@@ -24,14 +24,76 @@ import { AdminDetailScreen } from '../screens/admin/AdminDetailScreen';
 import { ManageCorporationsScreen } from '../screens/admin/ManageCorporationsScreen';
 import { CreateCorporationScreen } from '../screens/admin/CreateCorporationScreen';
 import { NotificationListScreen } from '../screens/NotificationListScreen';
+import NotificationService from '../services/NotificationService';
 
 const Stack = createNativeStackNavigator();
 
 import { COLORS } from '../styles/theme';
 
 export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, {}>((props, ref) => {
+  const navigationRef = React.useRef<NavigationContainerRef<any>>(null);
+
+  React.useImperativeHandle(ref, () => navigationRef.current!);
+
+  React.useEffect(() => {
+    // Navigate to complaint details when notification is tapped
+    NotificationService.setupNotificationListeners(
+      undefined,
+      async (response) => {
+        const data = response.notification.request.content.data;
+        if (data && data.complaintId) {
+          let targetScreen = 'ComplaintDetail'; // Default to Citizen view
+
+          if (data.type === 'new_complaint') {
+            targetScreen = 'AdminComplaintDetail';
+          } else if (data.type === 'complaint_status_update') {
+            targetScreen = 'ComplaintDetail';
+          } else {
+            // Fallback: Check Role
+            try {
+              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+              const profileStr = await AsyncStorage.getItem('userProfile');
+              if (profileStr) {
+                const profile = JSON.parse(profileStr);
+                const isAdmin = profile.role === 'WARD_ADMIN' || profile.role === 'SUPER_ADMIN' || profile.role === 'MASTER_ADMIN';
+                if (isAdmin) targetScreen = 'AdminComplaintDetail';
+              }
+            } catch (e) {
+              console.error("Error checking role fallback:", e);
+            }
+          }
+
+          if (navigationRef.current) {
+            navigationRef.current.navigate(targetScreen, {
+              complaintId: data.complaintId
+            });
+
+            // Mark notification as read
+            try {
+              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+              const axios = require('axios').default;
+              const API_URL = require('../config/api').API_URL;
+              const token = await AsyncStorage.getItem('userToken');
+
+              // Find and mark the notification as read by complaintId
+              await axios.post(`${API_URL}/notifications/mark-by-complaint/${data.complaintId}`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+            } catch (e) {
+              console.error("Error marking notification as read:", e);
+            }
+          }
+        }
+      }
+    );
+
+    return () => {
+      NotificationService.removeNotificationListeners();
+    };
+  }, []);
+
   return (
-    <NavigationContainer ref={ref}>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{
