@@ -1,15 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Button, TextInput, Alert, ActivityIndicator, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Button, TextInput, Alert, ActivityIndicator, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// import { FirebaseRecaptchaVerifierModal, FirebaseRecaptchaBanner } from 'expo-firebase-recaptcha';
-// Native Auth: No imports needed here except app
-// import { getAuth, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
-import { firebaseApp, firebaseConfig } from '../../config/firebase';
-
-// NOTE: You need to add 'expo-firebase-recaptcha' to dependencies
-// and ensure you have web credentials for the Firebase project.
-
-// Use Native Firebase Auth
 import { getAuth, signInWithPhoneNumber, getIdToken } from '@react-native-firebase/auth';
 
 export const LoginScreen = ({ navigation }: any) => {
@@ -110,70 +101,75 @@ export const LoginScreen = ({ navigation }: any) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}
+            >
+                <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                <View style={styles.logoContainer}>
-                    <Image
-                        source={require('../../../assets/logo.png')}
-                        style={styles.logo}
-                        resizeMode="contain"
-                    />
-                    <Text style={styles.title}>Welcome To Clean Care</Text>
-                </View>
+                    <View style={styles.logoContainer}>
+                        <Image
+                            source={require('../../../assets/logo.png')}
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
+                        <Text style={styles.title}>Welcome To Clean Care</Text>
+                    </View>
 
-                <View style={styles.formContainer}>
-                    {!confirm ? (
-                        <>
-                            <Text style={styles.label}>Phone Number</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="+880 1XXX-XXXXXX"
-                                placeholderTextColor="#999"
-                                autoComplete="tel"
-                                keyboardType="phone-pad"
-                                textContentType="telephoneNumber"
-                                onChangeText={setPhoneNumber}
-                                value={phoneNumber}
-                            />
+                    <View style={styles.formContainer}>
+                        {!confirm ? (
+                            <>
+                                <Text style={styles.label}>Phone Number</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="+880 1XXX-XXXXXX"
+                                    placeholderTextColor="#999"
+                                    autoComplete="tel"
+                                    keyboardType="phone-pad"
+                                    textContentType="telephoneNumber"
+                                    onChangeText={setPhoneNumber}
+                                    value={phoneNumber}
+                                />
 
-                            {loading ? (
-                                <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
-                            ) : (
-                                <TouchableOpacity style={styles.button} onPress={sendVerification}>
-                                    <Text style={styles.buttonText}>Send Verification Code</Text>
-                                </TouchableOpacity>
-                            )}
-                        </>
-                    ) : (
-                        <>
-                            <Text style={styles.label}>Enter Verification Code</Text>
-                            <TextInput
-                                style={styles.input}
-                                editable={!!confirm}
-                                placeholder="123456"
-                                placeholderTextColor="#999"
-                                onChangeText={setVerificationCode}
-                                keyboardType="number-pad"
-                                value={verificationCode}
-                            />
-
-                            {loading ? (
-                                <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
-                            ) : (
-                                <>
-                                    <TouchableOpacity style={styles.button} onPress={confirmCode}>
-                                        <Text style={styles.buttonText}>Confirm Code</Text>
+                                {loading ? (
+                                    <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
+                                ) : (
+                                    <TouchableOpacity style={styles.button} onPress={sendVerification}>
+                                        <Text style={styles.buttonText}>Send Verification Code</Text>
                                     </TouchableOpacity>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <Text style={styles.label}>Enter Verification Code</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    editable={!!confirm}
+                                    placeholder="123456"
+                                    placeholderTextColor="#999"
+                                    onChangeText={setVerificationCode}
+                                    keyboardType="number-pad"
+                                    value={verificationCode}
+                                />
 
-                                    <TouchableOpacity style={styles.cancelButton} onPress={() => setConfirm(null)}>
-                                        <Text style={styles.cancelButtonText}>Cancel</Text>
-                                    </TouchableOpacity>
-                                </>
-                            )}
-                        </>
-                    )}
-                </View>
-            </ScrollView>
+                                {loading ? (
+                                    <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
+                                ) : (
+                                    <>
+                                        <TouchableOpacity style={styles.button} onPress={confirmCode}>
+                                            <Text style={styles.buttonText}>Confirm Code</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity style={styles.cancelButton} onPress={() => setConfirm(null)}>
+                                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
