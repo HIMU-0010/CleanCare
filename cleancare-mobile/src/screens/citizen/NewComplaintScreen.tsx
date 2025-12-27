@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Button, Image, ScrollView, Alert, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Button, Image, ScrollView, Alert, Platform, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Also valid to clean this up, but let's try just using the string values or ignoring strict check if needed.
 // Actually, let's try to verify if MediaType is available as named export.
@@ -22,7 +22,8 @@ export const NewComplaintScreen = ({ navigation }: any) => {
   const [description, setDescription] = useState('');
   const [media, setMedia] = useState<any[]>([]); // Array of { uri, type, name? }
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [address, setAddress] = useState<string>('');
 
   // Custom Location State
@@ -99,7 +100,7 @@ export const NewComplaintScreen = ({ navigation }: any) => {
       return;
     }
 
-    setLoading(true);
+    setIsLocationLoading(true);
     try {
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
@@ -107,7 +108,7 @@ export const NewComplaintScreen = ({ navigation }: any) => {
     } catch (error) {
       Alert.alert('Error', 'Could not fetch location');
     } finally {
-      setLoading(false);
+      setIsLocationLoading(false);
     }
   };
 
@@ -117,7 +118,7 @@ export const NewComplaintScreen = ({ navigation }: any) => {
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       const token = await AsyncStorage.getItem('userToken');
@@ -139,7 +140,7 @@ export const NewComplaintScreen = ({ navigation }: any) => {
       if (!isResidence) {
         if (!customWardId || !customCorpId) {
           Alert.alert('Error', 'Please select a valid location');
-          setLoading(false);
+          setIsSubmitting(false);
           return;
         }
         formData.append('wardId', customWardId);
@@ -177,7 +178,7 @@ export const NewComplaintScreen = ({ navigation }: any) => {
       console.error(error);
       Alert.alert('Error', 'Failed to submit complaint. Check console/network.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -235,8 +236,10 @@ export const NewComplaintScreen = ({ navigation }: any) => {
         />
 
         <Text style={styles.label}>Location</Text>
-        <TouchableOpacity style={styles.primaryButton} onPress={getLocation}>
-          <Text style={styles.primaryButtonText}>GET MY LOCATION COORDINATES</Text>
+        <TouchableOpacity style={styles.primaryButton} onPress={getLocation} disabled={isLocationLoading}>
+          <Text style={styles.primaryButtonText}>
+            {isLocationLoading ? "GETTING LOCATION..." : "GET MY LOCATION COORDINATES"}
+          </Text>
         </TouchableOpacity>
         {location && <Text style={styles.locationText}>{address}</Text>}
 
@@ -304,15 +307,24 @@ export const NewComplaintScreen = ({ navigation }: any) => {
         {/* <View style={styles.spacer} /> */}
 
         <TouchableOpacity
-          style={[styles.primaryButton, loading && { opacity: 0.7 }]}
+          style={[styles.primaryButton, (isSubmitting || isLocationLoading) && { opacity: 0.7 }]}
           onPress={submitComplaint}
-          disabled={loading}
+          disabled={isSubmitting || isLocationLoading}
         >
           <Text style={styles.primaryButtonText}>
-            {loading ? "SUBMITTING..." : "SUBMIT COMPLAINT"}
+            {isSubmitting ? "SUBMITTING..." : "SUBMIT COMPLAINT"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
+      {/* Full Screen Loader */}
+      <Modal transparent={true} animationType="fade" visible={isSubmitting}>
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Submitting Complaint...</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -519,5 +531,28 @@ const styles = StyleSheet.create({
     height: 50,
     width: '100%',
     color: '#333',
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContainer: {
+    backgroundColor: 'white',
+    padding: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
 });
