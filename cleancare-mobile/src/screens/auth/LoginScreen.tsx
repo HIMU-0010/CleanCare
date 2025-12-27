@@ -219,22 +219,23 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderRadius: 30, // Fully rounded
         fontSize: 16,
-        marginBottom: 24,
+        marginBottom: 10,
         color: '#333',
-        elevation: 2, // Shadow for Android
-        shadowColor: '#000', // Shadow for iOS
+        elevation: 5, // Shadow for Android
+        // shadowColor: '#000', // Shadow for iOS
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
     },
     button: {
         backgroundColor: '#fff',
-        paddingVertical: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 20,
         borderRadius: 30,
         alignItems: 'center',
         marginTop: 10,
-        elevation: 3,
-        shadowColor: '#000',
+        elevation: 5,
+        shadowColor: '#111',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
