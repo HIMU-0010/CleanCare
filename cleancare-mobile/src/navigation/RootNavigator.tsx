@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AuthLoadingScreen } from '../screens/auth/AuthLoadingScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import { TermsAndConditionsScreen } from '../screens/auth/TermsAndConditionsScreen';
@@ -95,7 +96,7 @@ export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, {}>((
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName="AuthLoading"
         screenOptions={{
           headerStyle: {
             backgroundColor: COLORS.primary,
@@ -106,6 +107,7 @@ export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, {}>((
           },
         }}
       >
+        <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Signup" component={SignupScreen} options={{ title: 'Create Account' }} />
         <Stack.Screen name="TermsAndConditions" component={TermsAndConditionsScreen} options={{ title: 'Terms & Conditions' }} />
