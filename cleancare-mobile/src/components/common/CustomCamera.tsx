@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { COLORS } from '../../styles/theme';
 
 interface CustomCameraProps {
@@ -109,10 +109,10 @@ export default function CustomCamera({ visible, onClose, onMediaCaptured }: Cust
                     {/* Top Controls */}
                     <View style={styles.topControls}>
                         <TouchableOpacity onPress={onClose} style={styles.iconButton}>
-                            <Ionicons name="close" size={30} color="white" />
+                            <FontAwesome6 name="xmark" size={30} color="white" />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={toggleCamera} style={styles.iconButton}>
-                            <Ionicons name="camera-reverse-outline" size={30} color="white" />
+                            <FontAwesome6 name="camera-rotate" size={30} color="white" />
                         </TouchableOpacity>
                     </View>
 

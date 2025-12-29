@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Linking, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { RatingModal } from '../../components/complaint/RatingModal';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
@@ -203,9 +203,10 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
                 <View style={styles.ratingDisplay}>
                   <View style={{ flexDirection: 'row' }}>
                     {[1, 2, 3, 4, 5].map(star => (
-                      <Ionicons
+                      <FontAwesome6
                         key={star}
-                        name={star <= complaint.rating ? 'star' : 'star-outline'}
+                        name="star"
+                        solid={star <= complaint.rating}
                         size={24}
                         color="#FFD700"
                       />
@@ -231,7 +232,7 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
               style={[styles.reportButton, { backgroundColor: complaint.status === 'SOLVED' ? COLORS.primary : COLORS.error }]}
               onPress={() => setReportModalVisible(true)}
             >
-              <Ionicons name="document-text" size={20} color="white" style={{ marginRight: 8 }} />
+              <FontAwesome6 name="file-lines" size={20} color="white" style={{ marginRight: 8 }} />
               <Text style={styles.reportButtonText}>
                 {complaint.status === 'SOLVED' ? 'View Resolution Report' : 'View Rejection Details'}
               </Text>
@@ -245,12 +246,12 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
 
             <View style={styles.buttonRow}>
               <TouchableOpacity style={[styles.chatButton, styles.whatsappButton]} onPress={openWhatsApp}>
-                <Ionicons name="logo-whatsapp" size={24} color="white" />
+                <FontAwesome6 name="whatsapp" size={24} color="white" />
                 <Text style={styles.buttonText}>WhatsApp</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.chatButton, styles.messengerButton]} onPress={openMessenger}>
-                <Ionicons name="logo-facebook" size={24} color="white" />
+                <FontAwesome6 name="facebook-messenger" size={24} color="white" />
                 <Text style={styles.buttonText}>Messenger</Text>
               </TouchableOpacity>
             </View>

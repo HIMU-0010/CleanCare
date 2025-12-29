@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 import NotificationService from '../services/NotificationService';
 import { COLORS } from '../styles/theme';
 
@@ -90,15 +90,15 @@ export const NotificationListScreen = ({ navigation }: any) => {
     const getNotificationIcon = (type: string) => {
         switch (type) {
             case 'COMPLAINT_STATUS_UPDATE':
-                return 'checkmark-circle';
+                return 'circle-check';
             case 'NEW_ANNOUNCEMENT':
-                return 'megaphone';
+                return 'bullhorn';
             case 'EMERGENCY_CONTACT_UPDATE':
-                return 'alert-circle';
+                return 'circle-exclamation';
             case 'GALLERY_POST':
                 return 'images';
             default:
-                return 'notifications';
+                return 'bell';
         }
     };
 
@@ -138,7 +138,7 @@ export const NotificationListScreen = ({ navigation }: any) => {
             onPress={() => handleNotificationPress(item)}
         >
             <View style={[styles.iconContainer, { backgroundColor: getNotificationColor(item.type) + '20' }]}>
-                <Ionicons
+                <FontAwesome6
                     name={getNotificationIcon(item.type) as any}
                     size={24}
                     color={getNotificationColor(item.type)}
@@ -190,7 +190,7 @@ export const NotificationListScreen = ({ navigation }: any) => {
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="notifications-off" size={64} color="#CCC" />
+                        <FontAwesome6 name="bell-slash" size={64} color="#CCC" />
                         <Text style={styles.emptyText}>No notifications yet</Text>
                         <Text style={styles.emptySubtext}>
                             You'll be notified about complaint updates and important announcements

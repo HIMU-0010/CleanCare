@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { COLORS } from '../../styles/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const IMAGE_GAP = 8;
@@ -88,7 +88,7 @@ export const PhotoGalleryScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <FontAwesome6 name="arrow-left" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Photo Gallery</Text>
       </View> */}

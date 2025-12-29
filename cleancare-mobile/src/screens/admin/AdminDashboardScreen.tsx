@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { Sidebar, HamburgerButton } from '../../components/common/Sidebar';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { COMPLAINT_CATEGORIES } from '../../data/complaintCategories';
 import { NotificationBell } from '../../components/common/NotificationBell';
@@ -27,7 +27,7 @@ const VideoThumbnail = ({ uri }: { uri: string }) => {
         nativeControls={false} // Hide controls for thumbnail
       />
       <View style={styles.searchIconOverlay}>
-        <Ionicons name="play-circle" size={40} color="white" />
+        <FontAwesome6 name="circle-play" size={40} color="white" />
       </View>
     </View>
   );
@@ -143,14 +143,14 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
     if (userRole === 'MASTER_ADMIN' || userRole === 'SUPER_ADMIN') {
       items.push({
         label: 'Manage Admins',
-        // icon: '👥',
+        icon: 'users-gear',
         onPress: () => navigation.navigate('AdminManagement'),
       });
     }
 
     items.push({
       label: 'Logout',
-      // icon: '🚪',
+      icon: 'right-from-bracket',
       onPress: handleLogout,
       color: '#ff6b6b',
     });
@@ -189,7 +189,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
         onPress={() => setCategoryFilterVisible(!categoryFilterVisible)}
       >
         <Text style={styles.filterTitle}>Filter By Category</Text>
-        <Ionicons name={categoryFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+        <FontAwesome6 name={categoryFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
       </TouchableOpacity>
 
       {categoryFilterVisible && (
@@ -250,7 +250,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
               onPress={() => setLocationFilterVisible(!locationFilterVisible)}
             >
               <Text style={styles.filterTitle}>Filter By Location</Text>
-              <Ionicons name={locationFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+              <FontAwesome6 name={locationFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
             </TouchableOpacity>
 
             {locationFilterVisible && (
@@ -336,7 +336,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
               onPress={() => setLocationFilterVisible(!locationFilterVisible)}
             >
               <Text style={styles.filterTitle}>Your Zones</Text>
-              <Ionicons name={locationFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+              <FontAwesome6 name={locationFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
             </TouchableOpacity>
 
             {locationFilterVisible && (
@@ -437,7 +437,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
 
         {/* Search Input */}
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+          <FontAwesome6 name="magnifying-glass" size={20} color="#999" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search by Complaint ID"
@@ -447,7 +447,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color="#999" />
+              <FontAwesome6 name="circle-xmark" size={20} color="#999" />
             </TouchableOpacity>
           )}
         </View>

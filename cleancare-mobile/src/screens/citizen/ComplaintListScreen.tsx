@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
 // Component for video thumbnail
@@ -24,7 +24,7 @@ const VideoThumbnail = ({ uri }: { uri: string }) => {
         nativeControls={false} // Hide controls for thumbnail
       />
       <View style={styles.searchIconOverlay}>
-        <Ionicons name="play-circle" size={40} color="white" />
+        <FontAwesome6 name="circle-play" size={40} color="white" />
       </View>
     </View>
   );
@@ -111,7 +111,7 @@ export const ComplaintListScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       {/* Search Input */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+        <FontAwesome6 name="magnifying-glass" size={20} color="#999" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by Complaint ID"
@@ -121,7 +121,7 @@ export const ComplaintListScreen = ({ navigation }: any) => {
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="#999" />
+            <FontAwesome6 name="circle-xmark" size={20} color="#999" />
           </TouchableOpacity>
         )}
       </View>

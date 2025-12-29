@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Linking, ActivityIn
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 const PRIMARY_RED = '#FF4D4D';
 const SECONDARY_RED = '#FFE5E5';
@@ -33,10 +33,10 @@ export const EmergencyContactsScreen = ({ navigation }: any) => {
       console.error('Failed to fetch contacts', error);
       // Fallback data for demo if backend is empty/fails
       setContacts([
-        { id: '1', title: 'DSCC Emergency', subtitle: 'Waste Emergency & Urban Services', phone: '16106', icon: 'alert-circle', color: '#FF4D4D' },
-        { id: '2', title: 'National Emergency', subtitle: 'Police, Fire & Ambulance', phone: '999', icon: 'shield', color: '#007AFF' },
-        { id: '3', title: 'Fire Service', subtitle: 'Fire & rescue services', phone: '102', icon: 'flame', color: '#FF9500' },
-        { id: '4', title: 'Ambulance', subtitle: 'Medical emergency', phone: '199', icon: 'medkit', color: '#4CD964' },
+        { id: '1', title: 'DSCC Emergency', subtitle: 'Waste Emergency & Urban Services', phone: '16106', icon: 'circle-exclamation', color: '#FF4D4D' },
+        { id: '2', title: 'National Emergency', subtitle: 'Police, Fire & Ambulance', phone: '999', icon: 'shield-halved', color: '#007AFF' },
+        { id: '3', title: 'Fire Service', subtitle: 'Fire & rescue services', phone: '102', icon: 'fire', color: '#FF9500' },
+        { id: '4', title: 'Ambulance', subtitle: 'Medical emergency', phone: '199', icon: 'suitcase-medical', color: '#4CD964' },
       ]);
     } finally {
       setLoading(false);
@@ -50,9 +50,9 @@ export const EmergencyContactsScreen = ({ navigation }: any) => {
   const renderItem = ({ item }: { item: Contact }) => (
     <View style={styles.card}>
       <View style={[styles.iconContainer, { backgroundColor: item.color || PRIMARY_RED }]}>
-        {/* <Ionicons name={item.icon as any || 'call'} size={24} color="white" /> */}
+        {/* <FontAwesome6 name={item.icon as any || 'phone'} size={24} color="white" /> */}
         {/* <Text style={{ color: 'white', fontWeight: 'bold' }}>!</Text> */}
-        <Ionicons name="warning-outline" size={24} color="white" />
+        <FontAwesome6 name="triangle-exclamation" size={24} color="white" />
       </View>
       <View style={styles.contentContainer}>
         <Text style={styles.cardTitle}>{item.title}</Text>
@@ -61,7 +61,7 @@ export const EmergencyContactsScreen = ({ navigation }: any) => {
           style={[styles.callButton, { backgroundColor: item.color || PRIMARY_RED }]}
           onPress={() => handleCall(item.phone)}
         >
-          <Text style={styles.callButtonText}> <Ionicons name="call" size={16} color="white" />  Call {item.phone}</Text>
+          <Text style={styles.callButtonText}> <FontAwesome6 name="phone" size={16} color="white" />  Call {item.phone}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -71,13 +71,13 @@ export const EmergencyContactsScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <FontAwesome6 name="arrow-left" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Emergency Contacts</Text>
       </View> */}
 
       <View style={styles.banner}>
-        <Ionicons name="warning-outline" size={24} color="red" />
+        <FontAwesome6 name="triangle-exclamation" size={24} color="red" />
         <Text style={styles.bannerText}> Call these only in real emergency situations</Text>
       </View>
 
@@ -91,7 +91,7 @@ export const EmergencyContactsScreen = ({ navigation }: any) => {
           contentContainerStyle={styles.list}
           ListFooterComponent={() => (
             <View style={styles.infoBox}>
-              <Text style={styles.infoTitle}> <Ionicons name="call" size={20} color="gray" />  When to Call DSCC Emergency</Text>
+              <Text style={styles.infoTitle}> <FontAwesome6 name="phone" size={20} color="gray" />  When to Call DSCC Emergency</Text>
               <Text style={styles.infoText}>• Illegal waste dumping in progress</Text>
               <Text style={styles.infoText}>• Hazardous waste spillage</Text>
               <Text style={styles.infoText}>• Blocked drainage causing flooding</Text>

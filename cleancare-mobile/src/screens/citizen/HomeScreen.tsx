@@ -73,26 +73,32 @@ export const HomeScreen = ({ navigation }: any) => {
   const sidebarItems = [
     {
       label: 'My Complaints',
+      icon: 'list-check',
       onPress: () => navigation.navigate('ComplaintList'),
     },
     {
       label: 'My Profile',
+      icon: 'user',
       onPress: () => navigation.navigate('Profile'),
     },
     {
       label: 'Emergency Contacts',
+      icon: 'phone',
       onPress: () => navigation.navigate('EmergencyContacts'),
     },
     {
       label: 'Government Calendar',
+      icon: 'calendar-days',
       onPress: () => navigation.navigate('GovernmentCalendar'),
     },
     {
       label: 'Photo Gallery',
+      icon: 'images',
       onPress: () => navigation.navigate('PhotoGallery'),
     },
     {
       label: 'Logout',
+      icon: 'right-from-bracket',
       onPress: handleLogout,
       color: '#ff6b6b',
     },

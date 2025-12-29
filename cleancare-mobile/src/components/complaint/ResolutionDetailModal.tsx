@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { MediaGallery } from '../common/MediaGallery'; // Assuming this can be reused
 import { COLORS } from '../../styles/theme';
 
@@ -34,15 +34,15 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                     <View style={styles.header}>
                         <Text style={styles.title}>{title}</Text>
                         <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={24} color="#333" />
+                            <FontAwesome6 name="xmark" size={24} color="#333" />
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView contentContainerStyle={styles.scrollContent}>
                         {/* Status Banner */}
                         <View style={[styles.statusBanner, { backgroundColor: isSolved ? '#E8F5E9' : '#FFEBEE' }]}>
-                            <Ionicons
-                                name={isSolved ? 'checkmark-circle' : 'alert-circle'}
+                            <FontAwesome6
+                                name={isSolved ? 'circle-check' : 'circle-exclamation'}
                                 size={24}
                                 color={isSolved ? 'green' : 'red'}
                             />

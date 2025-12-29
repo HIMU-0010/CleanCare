@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const SIDEBAR_WIDTH = 280;
@@ -27,7 +28,7 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  
+
   // Safe navigation retrieval
   let currentRoute = '';
   try {
@@ -40,40 +41,43 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
   const getMenuItems = () => {
     // Base items from props, or generate if empty (backward compatibility)
     let menuItems = [...items];
-    
+
     // If strict role-based items are preferred over passed items:
     if (userRole === 'MASTER_ADMIN') {
-        const adminItem = {
-            label: 'Manage Admins',
-            onPress: () => { onClose(); navigation.navigate('AdminManagement'); },
-            color: undefined
-        };
-        const locItem = { 
-            label: 'Manage Corporations', 
-            onPress: () => { onClose(); navigation.navigate('ManageCorporations'); },
-            color: undefined
-        };
-        const contentItem = {
-            label: 'Manage Content',
-            onPress: () => { onClose(); navigation.navigate('ContentManagement'); },
-            color: undefined
-        };
-        
-        // Avoid duplicates if passed via items
-        if (!menuItems.some(i => i.label === 'Manage Admins')) menuItems.unshift(adminItem);
-        // Correctly place Locations item
-        const adminIndex = menuItems.findIndex(i => i.label === 'Manage Admins');
-        if (!menuItems.some(i => i.label === 'Manage Corporations')) {
-            if (adminIndex !== -1) menuItems.splice(adminIndex + 1, 0, locItem);
-            else menuItems.unshift(locItem);
-        }
-        
-        // Add Content Management
-        const locIndex = menuItems.findIndex(i => i.label === 'Manage Corporations');
-        if (!menuItems.some(i => i.label === 'Manage Content')) {
-            if (locIndex !== -1) menuItems.splice(locIndex + 1, 0, contentItem);
-            else menuItems.push(contentItem);
-        }
+      const adminItem = {
+        label: 'Manage Admins',
+        onPress: () => { onClose(); navigation.navigate('AdminManagement'); },
+        color: undefined,
+        icon: 'users-gear'
+      };
+      const locItem = {
+        label: 'Manage Corporations',
+        onPress: () => { onClose(); navigation.navigate('ManageCorporations'); },
+        color: undefined,
+        icon: 'building'
+      };
+      const contentItem = {
+        label: 'Manage Content',
+        onPress: () => { onClose(); navigation.navigate('ContentManagement'); },
+        color: undefined,
+        icon: 'layer-group'
+      };
+
+      // Avoid duplicates if passed via items
+      if (!menuItems.some(i => i.label === 'Manage Admins')) menuItems.unshift(adminItem);
+      // Correctly place Locations item
+      const adminIndex = menuItems.findIndex(i => i.label === 'Manage Admins');
+      if (!menuItems.some(i => i.label === 'Manage Corporations')) {
+        if (adminIndex !== -1) menuItems.splice(adminIndex + 1, 0, locItem);
+        else menuItems.unshift(locItem);
+      }
+
+      // Add Content Management
+      const locIndex = menuItems.findIndex(i => i.label === 'Manage Corporations');
+      if (!menuItems.some(i => i.label === 'Manage Content')) {
+        if (locIndex !== -1) menuItems.splice(locIndex + 1, 0, contentItem);
+        else menuItems.push(contentItem);
+      }
     }
 
     return menuItems;
@@ -121,13 +125,13 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
       </TouchableWithoutFeedback>
 
       {/* Sidebar */}
-      <Animated.View 
+      <Animated.View
         style={[
-          styles.sidebar, 
-          { 
-              transform: [{ translateX: slideAnim }],
-              paddingBottom: insets.bottom + 20, // Add safe area padding + extra
-              paddingTop: 10 // Keep top padding 
+          styles.sidebar,
+          {
+            transform: [{ translateX: slideAnim }],
+            paddingBottom: insets.bottom + 20, // Add safe area padding + extra
+            paddingTop: 10 // Keep top padding 
           }
         ]}
       >
@@ -155,7 +159,7 @@ export const Sidebar = ({ isOpen, onClose, items, userName, userRole }: SidebarP
                 item.onPress();
               }}
             >
-              {item.icon && <Text style={styles.menuIcon}>{item.icon}</Text>}
+              {item.icon && <FontAwesome6 name={item.icon as any} size={20} color={item.color || COLORS.primary} style={styles.menuIcon} />}
               <Text style={[styles.menuLabel, item.color ? { color: item.color } : null]}>
                 {item.label}
               </Text>
@@ -239,7 +243,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   userRole: {
-    color: COLORS.gray,
+    color: COLORS.lightGray,
     fontSize: 12,
     marginTop: 4,
   },
@@ -255,7 +259,6 @@ const styles = StyleSheet.create({
   menuIcon: {
     fontSize: 20,
     marginRight: 16,
-    color: COLORS.primary,
   },
   menuLabel: {
     color: COLORS.primary,

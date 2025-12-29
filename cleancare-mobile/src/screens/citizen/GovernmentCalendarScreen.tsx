@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { COLORS } from '../../styles/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -20,11 +20,11 @@ export const GovernmentCalendarScreen = ({ navigation }: any) => {
     try {
       const response = await axios.get(`${API_URL}/content/calendar`);
       if (response.data && response.data.imageUrl) {
-          // Construct full URL if relative
-          const url = response.data.imageUrl.startsWith('http') 
-              ? response.data.imageUrl 
-              : `${API_URL}/${response.data.imageUrl}`;
-          setCalendarUrl(url);
+        // Construct full URL if relative
+        const url = response.data.imageUrl.startsWith('http')
+          ? response.data.imageUrl
+          : `${API_URL}/${response.data.imageUrl}`;
+        setCalendarUrl(url);
       }
     } catch (error) {
       console.error('Failed to fetch calendar', error);
@@ -39,7 +39,7 @@ export const GovernmentCalendarScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       {/* <View style={styles.header}>
          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <FontAwesome6 name="arrow-left" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Government Calendar</Text>
       </View> */}
@@ -48,15 +48,15 @@ export const GovernmentCalendarScreen = ({ navigation }: any) => {
         {loading ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} />
         ) : calendarUrl ? (
-          <Image 
-            source={{ uri: calendarUrl }} 
-            style={styles.calendarImage} 
+          <Image
+            source={{ uri: calendarUrl }}
+            style={styles.calendarImage}
             resizeMode="contain"
           />
         ) : (
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No calendar currently available.</Text>
-            </View>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No calendar currently available.</Text>
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-      marginRight: 16,
+    marginRight: 16,
   },
   headerTitle: {
     color: 'white',
@@ -83,23 +83,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   scrollContent: {
-      flexGrow: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 10,
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
   },
   calendarImage: {
-      width: width - 20,
-      height: (width - 20) * 1.4, // Aspect ratio approx A4
-      backgroundColor: '#f0f0f0',
+    width: width - 20,
+    height: (width - 20) * 1.4, // Aspect ratio approx A4
+    backgroundColor: '#f0f0f0',
   },
   emptyContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyText: {
-      color: '#666',
-      fontSize: 16,
+    color: '#666',
+    fontSize: 16,
   },
 });

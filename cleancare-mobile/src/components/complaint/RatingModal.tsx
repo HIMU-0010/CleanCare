@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { COLORS } from '../../styles/theme';
 
 interface RatingModalProps {
@@ -40,8 +40,9 @@ export const RatingModal: React.FC<RatingModalProps> = ({ visible, onClose, onSu
           <View style={styles.starsContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                <Ionicons
-                  name={star <= rating ? 'star' : 'star-outline'}
+                <FontAwesome6
+                  name="star"
+                  solid={star <= rating}
                   size={40}
                   color="#FFD700"
                 />

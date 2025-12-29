@@ -8,7 +8,7 @@ import { MediaGallery } from '../../components/common/MediaGallery';
 import { ResolutionDetailModal } from '../../components/complaint/ResolutionDetailModal';
 import CustomCamera from '../../components/common/CustomCamera';
 import { COLORS } from '../../styles/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 const STATUS_OPTIONS = ['PROCESSING', 'SOLVED', 'REJECTED'];
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -228,7 +228,7 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
                 {updating ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <Text style={styles.statusText}>{status} {(status !== 'SOLVED' && status !== 'REJECTED') ? <Ionicons name="create" size={18} color="white" /> : (status == 'SOLVED') ? <Ionicons name="checkmark-circle-sharp" size={18} color="white" /> : <Ionicons name="close-circle-sharp" size={18} color="white" />}</Text>
+                  <Text style={styles.statusText}>{status} {(status !== 'SOLVED' && status !== 'REJECTED') ? <FontAwesome6 name="edit" size={16} color="white" /> : (status == 'SOLVED') ? <FontAwesome6 name="circle-check" size={16} color="white" /> : <FontAwesome6 name="circle-xmark" size={16} color="white" />}</Text>
                 )}
               </View>
             </TouchableOpacity>
@@ -304,7 +304,7 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
               style={[styles.reportButton, { backgroundColor: status === 'SOLVED' ? COLORS.primary : COLORS.error }]}
               onPress={() => setReportModalVisible(true)}
             >
-              <Ionicons name="document-text" size={20} color="white" style={{ marginRight: 8 }} />
+              <FontAwesome6 name="file-lines" size={20} color="white" style={{ marginRight: 8 }} />
               <Text style={styles.reportButtonText}>
                 {status === 'SOLVED' ? 'View Resolution Report' : 'View Rejection Details'}
               </Text>
@@ -317,7 +317,7 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
               <Text style={styles.RatingLabel}>Citizen Feedback</Text>
               <View style={{ flexDirection: 'row', marginBottom: 8 }}>
                 {[1, 2, 3, 4, 5].map(star => (
-                  <Ionicons key={star} name={star <= complaint.rating ? 'star' : 'star-outline'} size={24} color="#FFD700" />
+                  <FontAwesome6 key={star} name="star" solid={star <= complaint.rating} size={24} color="#FFD700" />
                 ))}
               </View>
               {complaint.review ? <Text style={styles.RatingValue}>{complaint.review}</Text> : <Text style={styles.RatingValue}>No review text provided.</Text>}

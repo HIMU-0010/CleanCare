@@ -2,21 +2,21 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../../styles/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 export const ContentManagementScreen = ({ navigation }: any) => {
   const menuItems = [
     {
       title: 'Emergency Contacts',
       subtitle: 'Manage numbers & priorities',
-      icon: 'call',
+      icon: 'phone',
       route: 'ManageContacts',
       color: '#FF4D4D'
     },
     {
       title: 'Government Calendar',
       subtitle: 'Upload annual calendar',
-      icon: 'calendar',
+      icon: 'calendar-days',
       route: 'ManageCalendar',
       color: COLORS.primary
     },
@@ -33,22 +33,22 @@ export const ContentManagementScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <FontAwesome6 name="arrow-left" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Content Management</Text>
       </View> */}
-      
+
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.sectionTitle}>Select a module to manage</Text>
-        
+
         {menuItems.map((item, index) => (
-          <TouchableOpacity 
-            key={index} 
+          <TouchableOpacity
+            key={index}
             style={styles.card}
             onPress={() => navigation.navigate(item.route)}
           >
             <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
-              <Ionicons name={item.icon as any} size={20} color="white" />
+              <FontAwesome6 name={item.icon as any} size={20} color="white" />
             </View>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{item.title}</Text>
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-      marginRight: 16,
+    marginRight: 16,
   },
   headerTitle: {
     color: 'white',

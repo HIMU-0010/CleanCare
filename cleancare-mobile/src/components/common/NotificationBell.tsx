@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import NotificationService from '../../services/NotificationService';
 import NotificationEvents from '../../utils/NotificationEvents';
@@ -41,7 +41,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ onPress, col
 
     return (
         <TouchableOpacity onPress={onPress} style={styles.container}>
-            <Ionicons name="notifications" size={24} color={color} />
+            <FontAwesome6 name="bell" size={24} color={color} />
             {unreadCount > 0 && (
                 <View style={styles.badge}>
                     <Text style={styles.badgeText}>
