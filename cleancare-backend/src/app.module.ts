@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -19,13 +20,14 @@ import { NotificationsModule } from './notifications/notifications.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
+        const isProduction = configService.get<string>('NODE_ENV') === 'production';
         const dbUrl = configService.get<string>('DATABASE_URL');
         if (dbUrl) {
           return {
             type: 'postgres',
             url: dbUrl,
             autoLoadEntities: true,
-            synchronize: true, // DEV only
+            synchronize: !isProduction, // Disable in production
           };
         }
         return {
@@ -36,11 +38,15 @@ import { NotificationsModule } from './notifications/notifications.module';
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME'),
           autoLoadEntities: true,
-          synchronize: true, // DEV only
+          synchronize: !isProduction, // Disable in production
         };
       },
       inject: [ConfigService],
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 10,
+    }]),
     AuthModule,
     UsersModule,
     ComplaintsModule,

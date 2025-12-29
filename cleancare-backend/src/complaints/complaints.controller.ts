@@ -3,22 +3,24 @@ import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ComplaintsService } from './complaints.service';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Role } from '../common/enums/role.enum';
 
 @Controller('complaints')
 export class ComplaintsController {
   constructor(private readonly complaintsService: ComplaintsService) {}
 
   @Get('debug-latest')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MASTER_ADMIN)
   async getLatestDebug() {
     // Debug endpoint to check DB persistence
     return this.complaintsService.findLatest();
   }
 
   @Post()
-  @UseGuards(AuthGuard('jwt')) // Use our custom JWT strategy (requires JwtStrategy which we haven't created explicitly yet, or we reuse firebase-jwt if we passed that token. Plan said "Backends return App JWT". So we need JwtStrategy.)
-  // Wait, in AuthModule we defined JwtModule but no JwtStrategy. We need to implement JwtStrategy for the standard @UseGuards(AuthGuard('jwt')) to work.
-  // For now, let's assume we implement JwtStrategy next or use the verified user from a guard.
-  // Actually, Phase 1 Plan said "Issue a custom JWT". So we need a strategy to verify it.
+  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FilesInterceptor('media', 5)) // Max 5 files (images/videos)
   async create(
     @Request() req,
@@ -35,7 +37,8 @@ export class ComplaintsController {
   }
 
   @Get('ward')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.WARD_ADMIN, Role.MASTER_ADMIN, Role.SUPER_ADMIN)
   async findAllByWard(@Request() req) {
     // In a real app, strict Role Guard here.
     const wardId = req.user.assigned_ward?.id || req.user.assigned_ward_id;
@@ -43,7 +46,8 @@ export class ComplaintsController {
   }
 
   @Get('hierarchy')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MASTER_ADMIN, Role.SUPER_ADMIN, Role.WARD_ADMIN)
   async findByHierarchy(
     @Request() req,
     @Query('corporationId') corporationId?: string,
@@ -68,7 +72,8 @@ export class ComplaintsController {
   }
 
   @Patch(':id/status')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.WARD_ADMIN, Role.SUPER_ADMIN, Role.MASTER_ADMIN)
   @UseInterceptors(FilesInterceptor('resolutionMedia', 5))
   async updateStatus(
     @Param('id') id: string,

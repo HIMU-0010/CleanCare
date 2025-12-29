@@ -16,6 +16,12 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const { user } = context.switchToHttp().getRequest();
+    
+    // If no user attached (e.g. public route mistakenly decorated, or auth guard failed/missing), deny
+    if (!user || !user.role) {
+        return false;
+    }
+
     return requiredRoles.some((role) => user.role === role);
   }
 }
