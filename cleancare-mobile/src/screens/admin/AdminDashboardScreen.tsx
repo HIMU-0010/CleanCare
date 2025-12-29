@@ -5,6 +5,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { Sidebar, HamburgerButton } from '../../components/common/Sidebar';
+import { COLORS } from '../../styles/theme';
+import { StorageService } from '../../services/StorageService';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { COMPLAINT_CATEGORIES } from '../../data/complaintCategories';
@@ -66,19 +68,50 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
 
   const loadInitialData = async () => {
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
+      let profile: any = null;
 
-      if (!token) {
+      if (token) {
+        try {
+          // Fetch fresh profile
+          const profileRes = await axios.get(`${API_URL}/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          profile = profileRes.data;
+
+          // Update local storage
+          await StorageService.setItem('userProfile', JSON.stringify(profile));
+        } catch (e) {
+          console.log('Failed to fetch profile', e);
+          // If fetching fresh profile fails, try to load from local storage
+          const storedProfile = await StorageService.getItem('userProfile');
+          if (storedProfile) {
+            profile = JSON.parse(storedProfile);
+
+          } else {
+            // If no token or stored profile, redirect to login
+            navigation.replace('Login');
+            return;
+          }
+        }
+      } else {
+        // No token, try to load profile from local storage
+        const storedProfile = await StorageService.getItem('userProfile');
+        if (storedProfile) {
+          profile = JSON.parse(storedProfile);
+
+        } else {
+          // No token and no stored profile, redirect to login
+          navigation.replace('Login');
+          return;
+        }
+      }
+
+      if (!profile) {
         navigation.replace('Login');
         return;
       }
 
-      const profileRes = await axios.get(`${API_URL}/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const profile = profileRes.data;
       setUserRole(profile.role);
       setUserProfile(profile);
 
@@ -93,7 +126,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
         setAssignedZones(profile.assigned_zones || []);
       }
 
-      await fetchComplaints(token, profile.role);
+      await fetchComplaints(token as any, profile.role);
     } catch (error) {
       console.error(error);
     } finally {
@@ -132,8 +165,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
   }, [selectedCorpId, selectedZoneId, selectedWardId, selectedCategory, selectedSubcategory]);
 
   const handleLogout = async () => {
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    await AsyncStorage.clear();
+    await StorageService.clear();
     navigation.replace('Login');
   };
 
@@ -513,8 +545,6 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
     </SafeAreaView>
   );
 };
-
-import { COLORS } from '../../styles/theme';
 
 const styles = StyleSheet.create({
   container: {

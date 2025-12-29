@@ -63,7 +63,8 @@
             "useLegacyPackaging": true
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

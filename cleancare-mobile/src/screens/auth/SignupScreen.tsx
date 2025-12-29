@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../styles/theme';
 import LocationSelector from '../../components/common/LocationSelector';
 import axios from 'axios';
+import { StorageService } from '../../services/StorageService';
 import { API_URL } from '../../config/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SignupScreen = ({ navigation, route }: any) => {
   const { phone, uid } = route.params || {}; // Passed from Login
@@ -76,10 +76,18 @@ const SignupScreen = ({ navigation, route }: any) => {
       );
 
       const { accessToken, user } = response.data;
-      await AsyncStorage.setItem('accessToken', accessToken);
-      // Consistent naming with Login and HomeScreen
-      await AsyncStorage.setItem('userProfile', JSON.stringify(user));
-      await AsyncStorage.setItem('userRole', 'USER'); // Ensure role is saved too if needed
+
+      // Save session
+      await StorageService.setItem('userToken', accessToken);
+      // Wait: SignupScreen used 'accessToken' key in grep results but usually we use 'userToken'. 
+      // Let's check grep result: "await AsyncStorage.setItem('accessToken', accessToken);" 
+      // Wait, LoginScreen uses 'userToken'. API.ts checks 'userToken'. 
+      // SignupScreen line 79 (grep) says: "await AsyncStorage.setItem('accessToken', accessToken);"
+      // THIS IS A BUG! It should be 'userToken' so api.ts can find it.
+      // I will fix this bug now to use 'userToken'.
+
+      await StorageService.setItem('userProfile', JSON.stringify(user));
+      await StorageService.setItem('userRole', 'USER'); // Ensure role is saved too if needed
 
       // Register push notification token
       try {

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet, StatusBar } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageService } from '../../services/StorageService'; // Import StorageService
 import { COLORS } from '../../styles/theme';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
@@ -12,46 +12,38 @@ export const AuthLoadingScreen = ({ navigation }: any) => {
 
     const checkToken = async () => {
         try {
-            const userToken = await AsyncStorage.getItem('userToken');
-            const userProfileStr = await AsyncStorage.getItem('userProfile');
+            // Check for token in SecureStore via StorageService
+            const userToken = await StorageService.getItem('userToken');
+            const userProfileStr = await StorageService.getItem('userProfile');
 
             if (userToken) {
-                // Optional: Verify token with backend
-                // For now, we trust the token and let the backend reject requests if invalid (401)
-                // Ideally, we should have a /auth/verify endpoint or just fetch profile
-
+                // Validate token with backend
                 try {
-                    // Let's try to fetch profile to verify token is still valid
-                    // This also ensures we have fresh user data
                     const response = await axios.get(`${API_URL}/auth/profile`, {
                         headers: { Authorization: `Bearer ${userToken}` }
                     });
 
-                    if (response.status === 200) {
-                        // Update profile in storage
-                        await AsyncStorage.setItem('userProfile', JSON.stringify(response.data));
-                        const user = response.data;
+                    // Update profile if valid
+                    await StorageService.setItem('userProfile', JSON.stringify(response.data));
 
-                        // Navigate based on role
-                        if (user.role === 'WARD_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MASTER_ADMIN') {
-                            navigation.replace('AdminDashboard');
-                        } else {
-                            navigation.replace('CitizenHome');
-                        }
-                        return;
+                    const user = response.data;
+                    if (user.role === 'WARD_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MASTER_ADMIN') {
+                        navigation.replace('AdminDashboard');
+                    } else {
+                        navigation.replace('CitizenHome');
                     }
-                } catch (e) {
-                    console.log('Token verification failed', e);
-                    // If verification fails (e.g. 401), we should probably clear token and go to login
-                    await AsyncStorage.removeItem('userToken');
+                } catch (error) {
+                    console.log('Token validation failed:', error);
+                    // Token invalid/expired
+                    await StorageService.removeItem('userToken');
+                    navigation.replace('Login');
                 }
+
+            } else {
+                navigation.replace('Login');
             }
-
-            // If no token or verification failed
-            navigation.replace('Login');
-
         } catch (e) {
-            console.log('Auth loading error', e);
+            console.warn(e);
             navigation.replace('Login');
         }
     };

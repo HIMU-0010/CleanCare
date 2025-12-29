@@ -1,5 +1,5 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageService } from '../services/StorageService';
 
 // Replace with your machine's local IP address for physical device testing
 // e.g., http://192.168.1.5:3000
@@ -16,7 +16,7 @@ export const api = axios.create({
 // Add auth token to all requests
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('userToken');
+    const token = await StorageService.getItem('userToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

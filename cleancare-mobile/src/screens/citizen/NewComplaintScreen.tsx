@@ -12,6 +12,7 @@ import { API_URL } from '../../config/api';
 
 import CustomCamera from '../../components/common/CustomCamera';
 import LocationSelector from '../../components/common/LocationSelector';
+import { StorageService } from '../../services/StorageService';
 import { COLORS } from '../../styles/theme';
 import { Picker } from '@react-native-picker/picker';
 import { COMPLAINT_CATEGORIES } from '../../data/complaintCategories';
@@ -151,11 +152,10 @@ export const NewComplaintScreen = ({ navigation }: any) => {
 
     setIsSubmitting(true);
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
-
+      const token = await StorageService.getItem('userToken');
       if (!token) {
-        Alert.alert('Error', 'No access token found. Please login again.');
+        Alert.alert('Error', 'You must be logged in to submit a complaint');
+        setIsSubmitting(false);
         return;
       }
 

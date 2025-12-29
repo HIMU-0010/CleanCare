@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome6 } from '@expo/vector-icons';
 import NotificationService from '../services/NotificationService';
 import { COLORS } from '../styles/theme';
+import { StorageService } from '../services/StorageService';
 
 interface Notification {
     id: string;
@@ -64,11 +65,14 @@ export const NotificationListScreen = ({ navigation }: any) => {
             } else {
                 // Fallback: Check user role
                 try {
-                    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-                    const profileStr = await AsyncStorage.getItem('userProfile');
+                    const profileStr = await StorageService.getItem('userProfile');
                     if (profileStr) {
                         const profile = JSON.parse(profileStr);
                         const isAdmin = profile.role === 'WARD_ADMIN' || profile.role === 'SUPER_ADMIN' || profile.role === 'MASTER_ADMIN';
+                        if (isAdmin) targetScreen = 'AdminComplaintDetailScreen'; // Wait, target names might be different. 
+                        // Original code said 'AdminComplaintDetail'. I should keep it.
+                        // Wait, I see targetScreen = 'AdminComplaintDetail' in lines 60 and 72.
+                        // I will NOT change the string 'AdminComplaintDetail'.
                         if (isAdmin) targetScreen = 'AdminComplaintDetail';
                     }
                 } catch (e) {

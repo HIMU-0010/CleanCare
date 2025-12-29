@@ -5,7 +5,7 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import { RatingModal } from '../../components/complaint/RatingModal';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageService } from '../../services/StorageService';
 import { MediaGallery } from '../../components/common/MediaGallery';
 
 import { COLORS } from '../../styles/theme';
@@ -27,7 +27,7 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
 
       if (!complaint && complaintId) {
         try {
-          const token = await AsyncStorage.getItem('userToken');
+          const token = await StorageService.getItem('userToken');
           const url = `${API_URL}/complaints/${complaintId}`;
           // console.log('Requesting URL:', url);
 
@@ -85,7 +85,8 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
 
   const handleRate = async (rating: number, review: string) => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      // setSubmittingRating(true); // Removed as it doesn't exist
+      const token = await StorageService.getItem('userToken');
       await axios.patch(`${API_URL}/complaints/${complaint.id}/rate`,
         { rating, review },
         { headers: { Authorization: `Bearer ${token}` } }

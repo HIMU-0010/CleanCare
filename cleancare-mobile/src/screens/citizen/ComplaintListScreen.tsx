@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOp
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
+import { COLORS } from '../../styles/theme';
+import { StorageService } from '../../services/StorageService';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -37,8 +39,8 @@ export const ComplaintListScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const fetchComplaints = async () => {
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
+      setLoading(true);
+      const token = await StorageService.getItem('userToken');
 
       if (!token) return;
 

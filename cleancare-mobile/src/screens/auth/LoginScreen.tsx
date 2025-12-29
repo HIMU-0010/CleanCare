@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Button, TextInput, Alert, ActivityIndicator, Im
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAuth, signInWithPhoneNumber, getIdToken } from '@react-native-firebase/auth';
 import { COLORS } from '../../styles/theme';
+import { StorageService } from '../../services/StorageService'; // Import StorageService
 
 export const LoginScreen = ({ navigation }: any) => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -53,7 +54,7 @@ export const LoginScreen = ({ navigation }: any) => {
 
             const { API_URL } = require('../../config/api');
             const axios = require('axios').default;
-            const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+            // StorageService is imported at top level
 
             const response = await axios.post(`${API_URL}/auth/login`, {}, {
                 headers: { Authorization: `Bearer ${idToken}` }
@@ -66,10 +67,10 @@ export const LoginScreen = ({ navigation }: any) => {
 
             const { accessToken, user } = response.data;
             if (accessToken) {
-                await AsyncStorage.setItem('userToken', accessToken);
-                await AsyncStorage.setItem('userProfile', JSON.stringify(user));
+                await StorageService.setItem('userToken', accessToken);
+                await StorageService.setItem('userProfile', JSON.stringify(user));
                 if (user && user.role) {
-                    await AsyncStorage.setItem('userRole', user.role);
+                    await StorageService.setItem('userRole', user.role);
                 }
 
                 // Register push notification token

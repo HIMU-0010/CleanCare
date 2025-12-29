@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Sidebar, HamburgerButton } from '../../components/common/Sidebar';
 import { NotificationBell } from '../../components/common/NotificationBell';
+import { COLORS } from '../../styles/theme';
+import { StorageService } from '../../services/StorageService';
 
 export const HomeScreen = ({ navigation }: any) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -30,23 +32,22 @@ export const HomeScreen = ({ navigation }: any) => {
 
   const loadUserProfile = async () => {
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       const axios = require('axios').default;
       const { API_URL } = require('../../config/api');
 
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
       // If token is missing, might redirect to login, but let's just try to load from storage first
       // or fetch if possible.
       if (token) {
         try {
           // Fetch fresh profile
-          const profileRes = await axios.get(`${API_URL}/auth/profile`, {
-            headers: { Authorization: `Bearer ${token}` }
+          const profileRes = await axios.get(`${API_URL} /auth/profile`, {
+            headers: { Authorization: `Bearer ${token} ` }
           });
           const profile = profileRes.data;
           setUserName(profile.name || '');
           // Update local storage
-          await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
+          await StorageService.setItem('userProfile', JSON.stringify(profile));
           return;
         } catch (e) {
           console.log('Failed to fetch profile, using cached', e);
@@ -54,7 +55,7 @@ export const HomeScreen = ({ navigation }: any) => {
       }
 
       // Fallback to cached
-      const profile = await AsyncStorage.getItem('userProfile');
+      const profile = await StorageService.getItem('userProfile');
       if (profile) {
         const parsed = JSON.parse(profile);
         setUserName(parsed.name || '');
@@ -65,8 +66,7 @@ export const HomeScreen = ({ navigation }: any) => {
   };
 
   const handleLogout = async () => {
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    await AsyncStorage.clear();
+    await StorageService.clear();
     navigation.replace('Login');
   };
 
@@ -118,7 +118,7 @@ export const HomeScreen = ({ navigation }: any) => {
       {/* Main Content */}
       <View style={styles.content}>
         <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeText}>Welcome{userName ? `, ${userName}` : ''}!</Text>
+          <Text style={styles.welcomeText}>Welcome{userName ? `, ${userName} ` : ''}!</Text>
           <Text style={styles.welcomeSubtext}>
             Help us keep your neighborhood clean by reporting issues you encounter.
           </Text>
@@ -145,7 +145,7 @@ export const HomeScreen = ({ navigation }: any) => {
   );
 };
 
-import { COLORS } from '../../styles/theme';
+
 
 const styles = StyleSheet.create({
   container: {
