@@ -16,12 +16,15 @@ import { COLORS } from '../../styles/theme';
 import { Picker } from '@react-native-picker/picker';
 import { COMPLAINT_CATEGORIES } from '../../data/complaintCategories';
 
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+
 export const NewComplaintScreen = ({ navigation }: any) => {
   const [category, setCategory] = useState(COMPLAINT_CATEGORIES[0].name);
   const [subcategory, setSubcategory] = useState(COMPLAINT_CATEGORIES[0].subcategories[0] || '');
   const [description, setDescription] = useState('');
   const [media, setMedia] = useState<any[]>([]); // Array of { uri, type, name? }
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [mapRegion, setMapRegion] = useState<Region | null>(null);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [address, setAddress] = useState<string>('');
@@ -102,14 +105,42 @@ export const NewComplaintScreen = ({ navigation }: any) => {
 
     setIsLocationLoading(true);
     try {
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-      setAddress(`Lat: ${location.coords.latitude.toFixed(4)}, Long: ${location.coords.longitude.toFixed(4)}`);
+      let locationResult = await Location.getCurrentPositionAsync({});
+      setLocation(locationResult);
+      setAddress(`Lat: ${locationResult.coords.latitude.toFixed(4)}, Long: ${locationResult.coords.longitude.toFixed(4)}`);
+
+      setMapRegion({
+        latitude: locationResult.coords.latitude,
+        longitude: locationResult.coords.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      });
+
     } catch (error) {
       Alert.alert('Error', 'Could not fetch location');
     } finally {
       setIsLocationLoading(false);
     }
+  };
+
+  // Synchronize location from map drag
+  const onMapPress = (e: any) => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setLocation({
+      ...location,
+      coords: {
+        ...location?.coords,
+        latitude,
+        longitude,
+        altitude: location?.coords.altitude || null,
+        accuracy: location?.coords.accuracy || null,
+        altitudeAccuracy: location?.coords.altitudeAccuracy || null,
+        heading: location?.coords.heading || null,
+        speed: location?.coords.speed || null,
+      },
+      timestamp: Date.now(),
+    });
+    setAddress(`Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`);
   };
 
   const submitComplaint = async () => {
@@ -236,6 +267,40 @@ export const NewComplaintScreen = ({ navigation }: any) => {
         />
 
         <Text style={styles.label}>Location</Text>
+
+        {/* Map View Section */}
+        <View style={styles.mapContainer}>
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={styles.map}
+            region={mapRegion || {
+              latitude: 23.8103, // Default fallback (e.g., Dhaka)
+              longitude: 90.4125,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }}
+            onPress={onMapPress} // Allow pinning by tap
+            showsUserLocation={true}
+            showsMyLocationButton={false} // Custom button below
+          >
+            {location && (
+              <Marker
+                coordinate={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                }}
+                draggable
+                onDragEnd={onMapPress}
+              />
+            )}
+          </MapView>
+          {!mapRegion && !location && (
+            <View style={styles.mapOverlay}>
+              <Text style={styles.mapOverlayText}>Tap 'Get My Location' or Move Map</Text>
+            </View>
+          )}
+        </View>
+
         <TouchableOpacity style={styles.primaryButton} onPress={getLocation} disabled={isLocationLoading}>
           <Text style={styles.primaryButtonText}>
             {isLocationLoading ? "GETTING LOCATION..." : "GET MY LOCATION COORDINATES"}
@@ -554,5 +619,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.primary,
+  },
+  mapContainer: {
+    height: 300,
+    width: '100%',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.7)',
+  },
+  mapOverlayText: {
+    color: '#666',
+    fontWeight: 'bold',
   },
 });

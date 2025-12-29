@@ -10,6 +10,7 @@ import { MediaGallery } from '../../components/common/MediaGallery';
 
 import { COLORS } from '../../styles/theme';
 import { ResolutionDetailModal } from '../../components/complaint/ResolutionDetailModal';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 export const ComplaintDetailScreen = ({ route, navigation }: any) => {
   const { complaint: initialComplaint, complaintId } = route.params;
@@ -159,12 +160,39 @@ export const ComplaintDetailScreen = ({ route, navigation }: any) => {
             <Text style={styles.locationValue}>
               {complaint.corporation?.name || 'N/A'} {'>'} {complaint.zone?.name ? `${complaint.zone.name} >` : ''} {complaint.ward?.name || 'N/A'}
             </Text>
-            <Text style={styles.locationValue}>
+            {/* <Text style={styles.locationValue}>
               {complaint.address
                 ? complaint.address
                 : `Lat: ${complaint.latitude}, Long: ${complaint.longitude}`
               }
-            </Text>
+            </Text> */}
+
+            {/* Map View */}
+            {complaint.latitude && complaint.longitude && (
+              <View style={styles.mapContainer}>
+                <MapView
+                  provider={PROVIDER_GOOGLE}
+                  style={styles.map}
+                  initialRegion={{
+                    latitude: parseFloat(complaint.latitude),
+                    longitude: parseFloat(complaint.longitude),
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
+                  }}
+                  scrollEnabled={true}
+                  zoomEnabled={true}
+                  pitchEnabled={false}
+                  rotateEnabled={false}
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: parseFloat(complaint.latitude),
+                      longitude: parseFloat(complaint.longitude),
+                    }}
+                  />
+                </MapView>
+              </View>
+            )}
           </View>
 
           {/* Rating Section */}
@@ -491,5 +519,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '500',
+  },
+  mapContainer: {
+    height: 200,
+    width: '100%',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
   },
 });
