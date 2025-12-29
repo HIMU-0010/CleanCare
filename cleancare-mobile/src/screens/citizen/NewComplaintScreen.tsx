@@ -347,21 +347,28 @@ export const NewComplaintScreen = ({ navigation }: any) => {
         </View>
 
         {/* Media Preview */}
-        <ScrollView horizontal style={styles.mediaPreviewContainer}>
-          {media.map((item, index) => (
-            <View key={index} style={styles.mediaThumbnailContainer}>
-              <Image source={{ uri: item.uri }} style={styles.mediaThumbnail} />
-              {item.type === 'video' && (
-                <View style={styles.videoBadge}>
-                  <Text style={styles.videoBadgeText}>VIDEO</Text>
-                </View>
-              )}
-              <TouchableOpacity style={styles.removeMediaBtn} onPress={() => removeMedia(index)}>
-                <Text style={styles.removeMediaText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
+        {/* Media Preview */}
+        {media.length > 0 ? (
+          <ScrollView horizontal style={styles.mediaPreviewContainer}>
+            {media.map((item, index) => (
+              <View key={index} style={styles.mediaThumbnailContainer}>
+                <Image source={{ uri: item.uri }} style={styles.mediaThumbnail} />
+                {item.type === 'video' && (
+                  <View style={styles.videoBadge}>
+                    <Text style={styles.videoBadgeText}>VIDEO</Text>
+                  </View>
+                )}
+                <TouchableOpacity style={styles.removeMediaBtn} onPress={() => removeMedia(index)}>
+                  <Text style={styles.removeMediaText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyMediaPlaceholder}>
+            <Text style={styles.emptyMediaText}>No media uploaded yet (Max 5 files)</Text>
+          </View>
+        )}
 
         <CustomCamera
           visible={isCameraVisible}
@@ -537,13 +544,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   mediaPreviewContainer: {
-    marginTop: 15,
+    marginTop: 20,
     flexDirection: 'row',
-    height: 120,
+    height: 130,
+    paddingLeft: 10,
   },
   mediaThumbnailContainer: {
     position: 'relative',
-    marginRight: 10,
+    marginRight: 15,
+    marginTop: 10,
     width: 100,
     height: 100,
   },
@@ -569,12 +578,12 @@ const styles = StyleSheet.create({
   },
   removeMediaBtn: {
     position: 'absolute',
-    top: -5,
-    right: -5,
+    top: -8,
+    right: -8,
     backgroundColor: 'red',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
@@ -642,5 +651,20 @@ const styles = StyleSheet.create({
   mapOverlayText: {
     color: '#666',
     fontWeight: 'bold',
+  },
+  emptyMediaPlaceholder: {
+    marginTop: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    height: 50,
+    justifyContent: 'center',
+  },
+  emptyMediaText: {
+    color: '#999',
+    fontSize: 13,
   },
 });

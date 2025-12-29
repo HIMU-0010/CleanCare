@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Button, TextInput, Alert, ActivityIndicator, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAuth, signInWithPhoneNumber, getIdToken } from '@react-native-firebase/auth';
+import { COLORS } from '../../styles/theme';
 
 export const LoginScreen = ({ navigation }: any) => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -113,7 +114,7 @@ export const LoginScreen = ({ navigation }: any) => {
                             style={styles.logo}
                             resizeMode="contain"
                         />
-                        <Text style={styles.title}>Welcome To Clean Care</Text>
+                        <Text style={styles.title}>Welcome To <Text style={{ fontWeight: 'bold', fontSize: 30 }}>Clean Care</Text></Text>
                     </View>
 
                     <View style={styles.formContainer}>

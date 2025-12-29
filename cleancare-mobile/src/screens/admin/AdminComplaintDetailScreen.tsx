@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
   mediaPreviewContainer: {
     flexDirection: 'row',
     maxHeight: 120,
-    marginBottom: 15,
+    // marginBottom: 0,
   },
   mediaThumbnailContainer: {
     position: 'relative',

@@ -54,6 +54,10 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
   /* Search State */
   const [searchQuery, setSearchQuery] = useState('');
 
+  /* Filter Visibility State */
+  const [locationFilterVisible, setLocationFilterVisible] = useState(true);
+  const [categoryFilterVisible, setCategoryFilterVisible] = useState(true);
+
   useFocusEffect(
     useCallback(() => {
       loadInitialData();
@@ -180,47 +184,58 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
 
   const renderCategoryFilters = () => (
     <View style={styles.filterSection}>
-      <Text style={styles.filterTitle}>Filter By Category:</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-        <TouchableOpacity
-          style={[styles.filterChip, !selectedCategory && styles.filterChipSelected]}
-          onPress={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
-        >
-          <Text style={[styles.filterChipText, !selectedCategory && styles.filterChipTextSelected]}>All</Text>
-        </TouchableOpacity>
-        {COMPLAINT_CATEGORIES.map((cat, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.filterChip, selectedCategory === cat.name && styles.filterChipSelected]}
-            onPress={() => { setSelectedCategory(cat.name); setSelectedSubcategory(''); }}
-          >
-            <Text style={[styles.filterChipText, selectedCategory === cat.name && styles.filterChipTextSelected]}>
-              {cat.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <TouchableOpacity
+        style={styles.filterHeader}
+        onPress={() => setCategoryFilterVisible(!categoryFilterVisible)}
+      >
+        <Text style={styles.filterTitle}>Filter By Category</Text>
+        <Ionicons name={categoryFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+      </TouchableOpacity>
 
-      {selectedCategory && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-          <TouchableOpacity
-            style={[styles.filterChip, !selectedSubcategory && styles.filterChipSelected]}
-            onPress={() => setSelectedSubcategory('')}
-          >
-            <Text style={[styles.filterChipText, !selectedSubcategory && styles.filterChipTextSelected]}>All Subcategories</Text>
-          </TouchableOpacity>
-          {COMPLAINT_CATEGORIES.find(c => c.name === selectedCategory)?.subcategories.map((sub, index) => (
+      {categoryFilterVisible && (
+        <>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
             <TouchableOpacity
-              key={index}
-              style={[styles.filterChip, selectedSubcategory === sub && styles.filterChipSelected]}
-              onPress={() => setSelectedSubcategory(sub)}
+              style={[styles.filterChip, !selectedCategory && styles.filterChipSelected]}
+              onPress={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
             >
-              <Text style={[styles.filterChipText, selectedSubcategory === sub && styles.filterChipTextSelected]}>
-                {sub}
-              </Text>
+              <Text style={[styles.filterChipText, !selectedCategory && styles.filterChipTextSelected]}>All</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+            {COMPLAINT_CATEGORIES.map((cat, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.filterChip, selectedCategory === cat.name && styles.filterChipSelected]}
+                onPress={() => { setSelectedCategory(cat.name); setSelectedSubcategory(''); }}
+              >
+                <Text style={[styles.filterChipText, selectedCategory === cat.name && styles.filterChipTextSelected]}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {selectedCategory && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+              <TouchableOpacity
+                style={[styles.filterChip, !selectedSubcategory && styles.filterChipSelected]}
+                onPress={() => setSelectedSubcategory('')}
+              >
+                <Text style={[styles.filterChipText, !selectedSubcategory && styles.filterChipTextSelected]}>All Subcategories</Text>
+              </TouchableOpacity>
+              {COMPLAINT_CATEGORIES.find(c => c.name === selectedCategory)?.subcategories.map((sub, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[styles.filterChip, selectedSubcategory === sub && styles.filterChipSelected]}
+                  onPress={() => setSelectedSubcategory(sub)}
+                >
+                  <Text style={[styles.filterChipText, selectedSubcategory === sub && styles.filterChipTextSelected]}>
+                    {sub}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </>
       )}
     </View>
   );
@@ -229,74 +244,84 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
     if (userRole === 'MASTER_ADMIN') {
       return (
         <View>
-          {renderCategoryFilters()}
           <View style={styles.filterSection}>
-            <Text style={styles.filterTitle}>Filter By Location:</Text>
+            <TouchableOpacity
+              style={styles.filterHeader}
+              onPress={() => setLocationFilterVisible(!locationFilterVisible)}
+            >
+              <Text style={styles.filterTitle}>Filter By Location</Text>
+              <Ionicons name={locationFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+            </TouchableOpacity>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-              <TouchableOpacity
-                style={[styles.filterChip, !selectedCorpId && styles.filterChipSelected]}
-                onPress={() => { setSelectedCorpId(''); setSelectedZoneId(''); setSelectedWardId(''); }}
-              >
-                <Text style={[styles.filterChipText, !selectedCorpId && styles.filterChipTextSelected]}>All</Text>
-              </TouchableOpacity>
-              {corporations.map(corp => (
-                <TouchableOpacity
-                  key={corp.id}
-                  style={[styles.filterChip, selectedCorpId === corp.id && styles.filterChipSelected]}
-                  onPress={() => { setSelectedCorpId(corp.id); setSelectedZoneId(''); setSelectedWardId(''); }}
-                >
-                  <Text style={[styles.filterChipText, selectedCorpId === corp.id && styles.filterChipTextSelected]}>
-                    {corp.code || corp.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {selectedCorpId && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-                <TouchableOpacity
-                  style={[styles.filterChip, !selectedZoneId && styles.filterChipSelected]}
-                  onPress={() => { setSelectedZoneId(''); setSelectedWardId(''); }}
-                >
-                  <Text style={[styles.filterChipText, !selectedZoneId && styles.filterChipTextSelected]}>All Zones</Text>
-                </TouchableOpacity>
-                {getZonesForCorp().map((zone: any) => (
+            {locationFilterVisible && (
+              <>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
                   <TouchableOpacity
-                    key={zone.id}
-                    style={[styles.filterChip, selectedZoneId === zone.id && styles.filterChipSelected]}
-                    onPress={() => { setSelectedZoneId(zone.id); setSelectedWardId(''); }}
+                    style={[styles.filterChip, !selectedCorpId && styles.filterChipSelected]}
+                    onPress={() => { setSelectedCorpId(''); setSelectedZoneId(''); setSelectedWardId(''); }}
                   >
-                    <Text style={[styles.filterChipText, selectedZoneId === zone.id && styles.filterChipTextSelected]}>
-                      {zone.name}
-                    </Text>
+                    <Text style={[styles.filterChipText, !selectedCorpId && styles.filterChipTextSelected]}>All</Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
-            )}
+                  {corporations.map(corp => (
+                    <TouchableOpacity
+                      key={corp.id}
+                      style={[styles.filterChip, selectedCorpId === corp.id && styles.filterChipSelected]}
+                      onPress={() => { setSelectedCorpId(corp.id); setSelectedZoneId(''); setSelectedWardId(''); }}
+                    >
+                      <Text style={[styles.filterChipText, selectedCorpId === corp.id && styles.filterChipTextSelected]}>
+                        {corp.code || corp.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
 
-            {selectedZoneId && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-                <TouchableOpacity
-                  style={[styles.filterChip, !selectedWardId && styles.filterChipSelected]}
-                  onPress={() => setSelectedWardId('')}
-                >
-                  <Text style={[styles.filterChipText, !selectedWardId && styles.filterChipTextSelected]}>All Wards</Text>
-                </TouchableOpacity>
-                {getWardsForZone().map((ward: any) => (
-                  <TouchableOpacity
-                    key={ward.id}
-                    style={[styles.filterChip, selectedWardId === ward.id && styles.filterChipSelected]}
-                    onPress={() => setSelectedWardId(ward.id)}
-                  >
-                    <Text style={[styles.filterChipText, selectedWardId === ward.id && styles.filterChipTextSelected]}>
-                      {ward.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                {selectedCorpId && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+                    <TouchableOpacity
+                      style={[styles.filterChip, !selectedZoneId && styles.filterChipSelected]}
+                      onPress={() => { setSelectedZoneId(''); setSelectedWardId(''); }}
+                    >
+                      <Text style={[styles.filterChipText, !selectedZoneId && styles.filterChipTextSelected]}>All Zones</Text>
+                    </TouchableOpacity>
+                    {getZonesForCorp().map((zone: any) => (
+                      <TouchableOpacity
+                        key={zone.id}
+                        style={[styles.filterChip, selectedZoneId === zone.id && styles.filterChipSelected]}
+                        onPress={() => { setSelectedZoneId(zone.id); setSelectedWardId(''); }}
+                      >
+                        <Text style={[styles.filterChipText, selectedZoneId === zone.id && styles.filterChipTextSelected]}>
+                          {zone.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+
+                {selectedZoneId && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+                    <TouchableOpacity
+                      style={[styles.filterChip, !selectedWardId && styles.filterChipSelected]}
+                      onPress={() => setSelectedWardId('')}
+                    >
+                      <Text style={[styles.filterChipText, !selectedWardId && styles.filterChipTextSelected]}>All Wards</Text>
+                    </TouchableOpacity>
+                    {getWardsForZone().map((ward: any) => (
+                      <TouchableOpacity
+                        key={ward.id}
+                        style={[styles.filterChip, selectedWardId === ward.id && styles.filterChipSelected]}
+                        onPress={() => setSelectedWardId(ward.id)}
+                      >
+                        <Text style={[styles.filterChipText, selectedWardId === ward.id && styles.filterChipTextSelected]}>
+                          {ward.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+              </>
             )}
           </View>
+          {renderCategoryFilters()}
         </View>
       );
     }
@@ -306,48 +331,58 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
         <View>
           {renderCategoryFilters()}
           <View style={styles.filterSection}>
-            <Text style={styles.filterTitle}>Your Zones:</Text>
+            <TouchableOpacity
+              style={styles.filterHeader}
+              onPress={() => setLocationFilterVisible(!locationFilterVisible)}
+            >
+              <Text style={styles.filterTitle}>Your Zones</Text>
+              <Ionicons name={locationFilterVisible ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+            </TouchableOpacity>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-              <TouchableOpacity
-                style={[styles.filterChip, !selectedZoneId && styles.filterChipSelected]}
-                onPress={() => { setSelectedZoneId(''); setSelectedWardId(''); }}
-              >
-                <Text style={[styles.filterChipText, !selectedZoneId && styles.filterChipTextSelected]}>All Zones</Text>
-              </TouchableOpacity>
-              {assignedZones.map(zone => (
-                <TouchableOpacity
-                  key={zone.id}
-                  style={[styles.filterChip, selectedZoneId === zone.id && styles.filterChipSelected]}
-                  onPress={() => { setSelectedZoneId(zone.id); setSelectedWardId(''); }}
-                >
-                  <Text style={[styles.filterChipText, selectedZoneId === zone.id && styles.filterChipTextSelected]}>
-                    {zone.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {selectedZoneId && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-                <TouchableOpacity
-                  style={[styles.filterChip, !selectedWardId && styles.filterChipSelected]}
-                  onPress={() => setSelectedWardId('')}
-                >
-                  <Text style={[styles.filterChipText, !selectedWardId && styles.filterChipTextSelected]}>All Wards</Text>
-                </TouchableOpacity>
-                {getWardsForZone().map((ward: any) => (
+            {locationFilterVisible && (
+              <>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
                   <TouchableOpacity
-                    key={ward.id}
-                    style={[styles.filterChip, selectedWardId === ward.id && styles.filterChipSelected]}
-                    onPress={() => setSelectedWardId(ward.id)}
+                    style={[styles.filterChip, !selectedZoneId && styles.filterChipSelected]}
+                    onPress={() => { setSelectedZoneId(''); setSelectedWardId(''); }}
                   >
-                    <Text style={[styles.filterChipText, selectedWardId === ward.id && styles.filterChipTextSelected]}>
-                      {ward.name}
-                    </Text>
+                    <Text style={[styles.filterChipText, !selectedZoneId && styles.filterChipTextSelected]}>All Zones</Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
+                  {assignedZones.map(zone => (
+                    <TouchableOpacity
+                      key={zone.id}
+                      style={[styles.filterChip, selectedZoneId === zone.id && styles.filterChipSelected]}
+                      onPress={() => { setSelectedZoneId(zone.id); setSelectedWardId(''); }}
+                    >
+                      <Text style={[styles.filterChipText, selectedZoneId === zone.id && styles.filterChipTextSelected]}>
+                        {zone.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                {selectedZoneId && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+                    <TouchableOpacity
+                      style={[styles.filterChip, !selectedWardId && styles.filterChipSelected]}
+                      onPress={() => setSelectedWardId('')}
+                    >
+                      <Text style={[styles.filterChipText, !selectedWardId && styles.filterChipTextSelected]}>All Wards</Text>
+                    </TouchableOpacity>
+                    {getWardsForZone().map((ward: any) => (
+                      <TouchableOpacity
+                        key={ward.id}
+                        style={[styles.filterChip, selectedWardId === ward.id && styles.filterChipSelected]}
+                        onPress={() => setSelectedWardId(ward.id)}
+                      >
+                        <Text style={[styles.filterChipText, selectedWardId === ward.id && styles.filterChipTextSelected]}>
+                          {ward.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+              </>
             )}
           </View>
         </View>
@@ -513,11 +548,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  filterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   filterTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 8,
   },
   filterRow: {
     marginBottom: 8,
@@ -641,8 +681,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'white',
     margin: 0,
-    marginBottom: 8,
-    marginHorizontal: 6,
+    marginBottom: 2,
+    marginHorizontal: 0,
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
