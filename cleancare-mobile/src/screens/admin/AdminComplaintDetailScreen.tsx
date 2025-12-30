@@ -4,6 +4,7 @@ import { launchImageLibraryAsync } from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
+import { StorageService } from '../../services/StorageService';
 import { MediaGallery } from '../../components/common/MediaGallery';
 import { ResolutionDetailModal } from '../../components/complaint/ResolutionDetailModal';
 import CustomCamera from '../../components/common/CustomCamera';
@@ -32,8 +33,7 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
     const fetchComplaint = async () => {
       if (!complaint && complaintId) {
         try {
-          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-          const token = await AsyncStorage.getItem('userToken');
+          const token = await StorageService.getItem('userToken');
           const url = `${API_URL}/complaints/${complaintId}`;
 
           const response = await axios.get(url, {
@@ -121,8 +121,7 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
     setResolutionModalVisible(false);
 
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
 
       const formData = new FormData();
       formData.append('status', pendingStatus);
@@ -171,8 +170,7 @@ export const AdminComplaintDetailScreen = ({ route, navigation }: any) => {
     setModalVisible(false);
 
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
 
       const formData = new FormData();
       formData.append('status', newStatus);

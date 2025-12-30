@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
+import { StorageService } from '../../services/StorageService';
 
 export const AdminDetailScreen = ({ navigation, route }: any) => {
   const { adminId } = route.params;
@@ -12,15 +13,15 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
   const [saving, setSaving] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // Edit form state
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
-  
+
   // For Super Admin: zone selection
   const [availableZones, setAvailableZones] = useState<any[]>([]);
   const [selectedZoneIds, setSelectedZoneIds] = useState<string[]>([]);
-  
+
   // For Ward Admin: ward selection  
   const [availableWards, setAvailableWards] = useState<any[]>([]);
   const [selectedWardId, setSelectedWardId] = useState<string | null>(null);
@@ -31,9 +32,8 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
 
   const fetchAdminDetails = async () => {
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
-      
+      const token = await StorageService.getItem('userToken');
+
       // Get current user's role
       const profileRes = await axios.get(`${API_URL}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -44,24 +44,24 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
       const response = await axios.get(`${API_URL}/admins/${adminId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       const adminData = response.data;
       setAdmin(adminData);
       setEditName(adminData.name || '');
       setEditPhone(adminData.phone || '');
-      
+
       // Set current zone/ward selections
       if (adminData.role === 'SUPER_ADMIN') {
         setSelectedZoneIds(adminData.assigned_zones?.map((z: any) => z.id) || []);
         // Load zones for the corporation
         if (adminData.assigned_corporation?.id) {
-          await loadZonesForCorporation(adminData.assigned_corporation.id, token);
+          await loadZonesForCorporation(adminData.assigned_corporation.id, token as any);
         }
       } else if (adminData.role === 'WARD_ADMIN') {
         setSelectedWardId(adminData.assigned_ward?.id || null);
         // Load wards for the zone
         if (adminData.assigned_ward?.zone?.id) {
-          await loadWardsForZone(adminData.assigned_ward.zone.id, token);
+          await loadWardsForZone(adminData.assigned_ward.zone.id, token as any);
         }
       }
     } catch (error) {
@@ -107,11 +107,10 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
 
     try {
       setSaving(true);
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
 
       const updateData: any = { name: editName, phone: editPhone };
-      
+
       // Add zone/ward updates based on admin role
       if (admin.role === 'SUPER_ADMIN') {
         updateData.zoneIds = selectedZoneIds;
@@ -119,7 +118,7 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
         updateData.wardId = selectedWardId;
       }
 
-      await axios.patch(`${API_URL}/admins/${adminId}`, 
+      await axios.patch(`${API_URL}/admins/${adminId}`,
         updateData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -139,7 +138,7 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
   const handleToggleStatus = async () => {
     const newStatus = !admin.is_active;
     const action = newStatus ? 'unblock' : 'block';
-    
+
     Alert.alert(
       'Confirm',
       `Are you sure you want to ${action} this admin?`,
@@ -149,10 +148,9 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
           text: 'Yes',
           onPress: async () => {
             try {
-              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-              const token = await AsyncStorage.getItem('userToken');
+              const token = await StorageService.getItem('userToken');
 
-              await axios.patch(`${API_URL}/admins/${adminId}/status`, 
+              await axios.patch(`${API_URL}/admins/${adminId}/status`,
                 { isActive: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
               );
@@ -217,7 +215,7 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
         {/* Basic Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Basic Information</Text>
-          
+
           <View style={styles.field}>
             <Text style={styles.label}>Name</Text>
             {isEditing ? (
@@ -251,14 +249,14 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
         {/* Assignment Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Assigned Areas</Text>
-          
+
           {admin.role === 'SUPER_ADMIN' && (
             <>
               <View style={styles.field}>
                 <Text style={styles.label}>Corporation</Text>
                 <Text style={styles.value}>{admin.assigned_corporation?.name || 'Not Assigned'}</Text>
               </View>
-              
+
               <View style={styles.field}>
                 <Text style={styles.label}>Managed Zones</Text>
                 {isEditing && availableZones.length > 0 ? (
@@ -335,15 +333,15 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
           <View style={styles.actions}>
             {isEditing ? (
               <>
-                <TouchableOpacity 
-                  style={[styles.button, styles.saveButton]} 
+                <TouchableOpacity
+                  style={[styles.button, styles.saveButton]}
                   onPress={handleSave}
                   disabled={saving}
                 >
                   <Text style={styles.buttonText}>{saving ? 'Saving...' : 'Save Changes'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.button, styles.cancelButton]} 
+                <TouchableOpacity
+                  style={[styles.button, styles.cancelButton]}
                   onPress={() => {
                     setIsEditing(false);
                     setEditName(admin.name || '');
@@ -357,15 +355,15 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
               </>
             ) : (
               <>
-                <TouchableOpacity 
-                  style={[styles.button, styles.editButton]} 
+                <TouchableOpacity
+                  style={[styles.button, styles.editButton]}
                   onPress={() => setIsEditing(true)}
                 >
                   <Text style={styles.buttonText}>Edit Admin</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={[styles.button, admin.is_active ? styles.blockButton : styles.unblockButton]} 
+
+                <TouchableOpacity
+                  style={[styles.button, admin.is_active ? styles.blockButton : styles.unblockButton]}
                   onPress={handleToggleStatus}
                 >
                   <Text style={styles.buttonText}>{admin.is_active ? 'Block Admin' : 'Unblock Admin'}</Text>

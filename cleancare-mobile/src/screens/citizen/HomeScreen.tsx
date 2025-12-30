@@ -41,8 +41,8 @@ export const HomeScreen = ({ navigation }: any) => {
       if (token) {
         try {
           // Fetch fresh profile
-          const profileRes = await axios.get(`${API_URL} /auth/profile`, {
-            headers: { Authorization: `Bearer ${token} ` }
+          const profileRes = await axios.get(`${API_URL}/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
           const profile = profileRes.data;
           setUserName(profile.name || '');

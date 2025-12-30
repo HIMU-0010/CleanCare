@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ScrollView, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ScrollView, Modal, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../../styles/theme';
 import axios from 'axios';
 import { API_URL } from '../../../config/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageService } from '../../../services/StorageService';
 import * as ImagePicker from 'expo-image-picker';
+import CustomCamera from '../../../components/common/CustomCamera';
 
 export const ManageGalleryScreen = ({ navigation }: any) => {
     const [posts, setPosts] = useState([]);
@@ -19,10 +20,19 @@ export const ManageGalleryScreen = ({ navigation }: any) => {
     const [uploading, setUploading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+    const [isCameraVisible, setIsCameraVisible] = useState(false);
 
     useEffect(() => {
         fetchGallery();
     }, []);
+
+    const handleCameraCapture = (asset: { uri: string, type: 'image' | 'video' }) => {
+        // Since gallery only supports images for now in this screen or map to existing struct
+        // Asset type from CustomCamera is 'image' | 'video'
+        // ManageGalleryScreen expects objects with uri.
+        setSelectedImages(prev => [...prev, { uri: asset.uri, type: asset.type }]);
+        setIsCameraVisible(false);
+    };
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -80,7 +90,7 @@ export const ManageGalleryScreen = ({ navigation }: any) => {
 
         try {
             setUploading(true);
-            const token = await AsyncStorage.getItem('userToken');
+            const token = await StorageService.getItem('userToken');
 
             const formData = new FormData();
             formData.append('title', title);
@@ -168,18 +178,13 @@ export const ManageGalleryScreen = ({ navigation }: any) => {
         </View>
     );
 
+    const removeImage = (index: number) => {
+        setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    };
+
     return (
         <SafeAreaView style={styles.container}>
-            {/* <View style={styles.header}>
-         <TouchableOpacity onPress={() => navigation.goBack()} style={{marginRight: 12}}>
-              <Text style={{color: 'white', fontSize: 24}}>←</Text>
-         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Manage Gallery</Text>
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addBtn}>
-            <Text style={styles.addBtnText}>+ New Post</Text>
-        </TouchableOpacity>
-      </View> */}
-
+            {/* ... List Logic ... */}
             {loading ? (
                 <ActivityIndicator color={COLORS.primary} style={{ marginTop: 20 }} />
             ) : (
@@ -192,52 +197,75 @@ export const ManageGalleryScreen = ({ navigation }: any) => {
                 />
             )}
 
-            <Modal visible={modalVisible} animationType="slide">
-                <SafeAreaView style={styles.modalContainer}>
-                    <View style={styles.modalHeader}>
+            <Modal visible={modalVisible} animationType="slide" transparent>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalOverlay}
+                >
+                    <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>{isEditing ? 'Edit Post' : 'New Gallery Post'}</Text>
-                        <TouchableOpacity onPress={() => setModalVisible(false)}>
-                            <Text style={styles.closeText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
 
-                    <ScrollView contentContainerStyle={styles.form}>
-                        <Text style={styles.label}>Title</Text>
-                        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Event Title" />
+                        <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
+                            <Text style={styles.label}>Title</Text>
+                            <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Event Title" />
 
-                        <Text style={styles.label}>Description</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            value={description}
-                            onChangeText={setDescription}
-                            placeholder="Event Details..."
-                            multiline
-                        />
+                            <Text style={styles.label}>Description</Text>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                value={description}
+                                onChangeText={setDescription}
+                                placeholder="Event Details..."
+                                multiline
+                            />
 
-                        <Text style={styles.label}>Images ({selectedImages.length})</Text>
-                        <ScrollView horizontal style={styles.imageScroll}>
-                            {selectedImages.map((img, i) => (
-                                <Image key={i} source={{ uri: img.uri }} style={styles.previewImage} />
-                            ))}
-                            <TouchableOpacity style={styles.pickBtn} onPress={pickImages}>
-                                <Text style={{ fontSize: 30, color: '#aaa' }}>+</Text>
-                            </TouchableOpacity>
+                            <Text style={styles.label}>Images ({selectedImages.length})</Text>
+
+                            <View style={styles.mediaButtonsRow}>
+                                <TouchableOpacity style={styles.flexButton} onPress={pickImages}>
+                                    <Text style={styles.buttonTextSmall}>OPEN GALLERY</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.flexButton, { backgroundColor: '#555' }]} onPress={() => setIsCameraVisible(true)}>
+                                    <Text style={styles.buttonTextSmall}>OPEN CAMERA</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <ScrollView horizontal style={styles.imageScroll}>
+                                {selectedImages.map((img, i) => (
+                                    <View key={i} style={styles.mediaThumbnailContainer}>
+                                        <Image source={{ uri: img.uri }} style={styles.previewImage} />
+                                        <TouchableOpacity style={styles.removeMediaBtn} onPress={() => removeImage(i)}>
+                                            <Text style={styles.removeMediaText}>✕</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                ))}
+                            </ScrollView>
+
+                            <View style={styles.modalButtons}>
+                                <TouchableOpacity onPress={() => { setModalVisible(false); resetForm(); }} style={styles.cancelModalBtn}>
+                                    <Text style={{ color: '#333' }}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.submitBtn, uploading && styles.disabledBtn]}
+                                    onPress={handleSave}
+                                    disabled={uploading}
+                                >
+                                    {uploading ? (
+                                        <ActivityIndicator color="white" />
+                                    ) : (
+                                        <Text style={styles.submitBtnText}>{isEditing ? 'Update' : 'Post'}</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                         </ScrollView>
-
-                        <TouchableOpacity
-                            style={[styles.submitBtn, uploading && styles.disabledBtn]}
-                            onPress={handleSave}
-                            disabled={uploading}
-                        >
-                            {uploading ? (
-                                <ActivityIndicator color="white" />
-                            ) : (
-                                <Text style={styles.submitBtnText}>{isEditing ? 'Update Post' : 'Post Event'}</Text>
-                            )}
-                        </TouchableOpacity>
-                    </ScrollView>
-                </SafeAreaView>
+                    </View>
+                </KeyboardAvoidingView>
             </Modal>
+
+            <CustomCamera
+                visible={isCameraVisible}
+                onClose={() => setIsCameraVisible(false)}
+                onMediaCaptured={handleCameraCapture}
+            />
         </SafeAreaView>
     );
 };
@@ -258,18 +286,38 @@ const styles = StyleSheet.create({
     empty: { textAlign: 'center', marginTop: 20, color: '#999' },
     actionBtn: { width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
 
-    modalContainer: { flex: 1, backgroundColor: 'white' },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
-    modalTitle: { fontSize: 18, fontWeight: 'bold' },
-    closeText: { color: 'red', fontSize: 16 },
-    form: { padding: 20 },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+    modalContent: { backgroundColor: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '90%' },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+    form: { paddingBottom: 20 },
     label: { fontSize: 14, fontWeight: 'bold', marginBottom: 8, color: '#333' },
     input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 20, fontSize: 16 },
     textArea: { height: 100, textAlignVertical: 'top' },
     imageScroll: { flexDirection: 'row', marginBottom: 20 },
     previewImage: { width: 80, height: 80, borderRadius: 8, marginRight: 10 },
     pickBtn: { width: 80, height: 80, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', justifyContent: 'center', alignItems: 'center', borderStyle: 'dashed' },
-    submitBtn: { backgroundColor: COLORS.primary, padding: 16, borderRadius: 12, alignItems: 'center' },
+    modalButtons: { flexDirection: 'row', gap: 12 },
+    cancelModalBtn: { flex: 1, padding: 16, borderRadius: 12, backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' },
+    submitBtn: { flex: 1, backgroundColor: COLORS.primary, padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
     disabledBtn: { opacity: 0.7 },
     submitBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+    mediaThumbnailContainer: { position: 'relative', marginRight: 10 },
+    removeMediaBtn: { position: 'absolute', top: -5, right: -5, backgroundColor: 'red', width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
+    removeMediaText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
+
+    // New Media Button Styles matching NewComplaintScreen
+    mediaButtonsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginBottom: 15 },
+    flexButton: { flex: 1, backgroundColor: COLORS.primary, paddingVertical: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+    buttonTextSmall: { color: 'white', fontWeight: 'bold', fontSize: 12, letterSpacing: 0.5 },
+    emptyMediaPlaceholder: {
+        padding: 20,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderStyle: 'dashed',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    emptyMediaText: { color: '#999', fontSize: 13 },
 });

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../../styles/theme';
 import axios from 'axios';
 import { API_URL } from '../../../config/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageService } from '../../../services/StorageService';
 import * as ImagePicker from 'expo-image-picker';
 
 export const ManageCalendarScreen = ({ navigation }: any) => {
@@ -46,7 +46,7 @@ export const ManageCalendarScreen = ({ navigation }: any) => {
   const uploadImage = async (asset: any) => {
     try {
       setUploading(true);
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
 
       const formData = new FormData();
       formData.append('image', {

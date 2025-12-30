@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { COLORS } from '../../styles/theme';
+import { StorageService } from '../../services/StorageService';
 
 interface Ward {
   id: string;
@@ -38,21 +39,20 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
   const [modalType, setModalType] = useState<'addZone' | 'addWard'>('addZone');
   const [selectedCorpId, setSelectedCorpId] = useState<string>('');
   const [selectedZoneId, setSelectedZoneId] = useState<string>('');
-  
+
   // Form State
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
   const fetchLocations = async () => {
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
-      
+      const token = await StorageService.getItem('userToken');
+
       const corpRes = await axios.get(`${API_URL}/locations/corporations`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCorporations(corpRes.data);
-      
+
       // Auto-expand first corporation
       if (corpRes.data.length > 0) {
         setExpandedCorps(new Set([corpRes.data[0].id]));
@@ -74,8 +74,7 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
 
   const handleCreate = async () => {
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
       const headers = { Authorization: `Bearer ${token}` };
 
       if (modalType === 'addZone') {
@@ -153,14 +152,14 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
               {/* Corp Header */}
               <TouchableOpacity style={styles.corpHeader} onPress={() => toggleCorp(corp.id)}>
                 <View style={styles.headerTitle}>
-                    <Text style={styles.folderIcon}>{expandedCorps.has(corp.id) ? '📂' : '📁'}</Text>
-                    <Text style={styles.corpName}>{corp.name} ({corp.code})</Text>
+                  <Text style={styles.folderIcon}>{expandedCorps.has(corp.id) ? '📂' : '📁'}</Text>
+                  <Text style={styles.corpName}>{corp.name} ({corp.code})</Text>
                 </View>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.addButtonInfo}
                   onPress={() => openAddZone(corp.id)}
                 >
-                    <Text style={styles.addButtonText}>+ Zone</Text>
+                  <Text style={styles.addButtonText}>+ Zone</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
 
@@ -169,33 +168,33 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
                 <View style={styles.corpContent}>
                   {corp.zones?.map(zone => (
                     <View key={zone.id} style={styles.zoneSection}>
-                       <TouchableOpacity style={styles.zoneHeader} onPress={() => toggleZone(zone.id)}>
-                          <View style={styles.headerTitle}>
-                              <Text style={styles.folderIcon}>{expandedZones.has(zone.id) ? '📂' : '📁'}</Text>
-                              <Text style={styles.zoneName}>{zone.name}</Text>
-                          </View>
-                           <TouchableOpacity 
-                              style={styles.addButtonSecondary}
-                              onPress={() => openAddWard(zone.id)}
-                            >
-                                <Text style={styles.addButtonText}>+ Ward</Text>
-                            </TouchableOpacity>
-                       </TouchableOpacity>
-                       
-                       {/* Wards List */}
-                       {expandedZones.has(zone.id) && (
+                      <TouchableOpacity style={styles.zoneHeader} onPress={() => toggleZone(zone.id)}>
+                        <View style={styles.headerTitle}>
+                          <Text style={styles.folderIcon}>{expandedZones.has(zone.id) ? '📂' : '📁'}</Text>
+                          <Text style={styles.zoneName}>{zone.name}</Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.addButtonSecondary}
+                          onPress={() => openAddWard(zone.id)}
+                        >
+                          <Text style={styles.addButtonText}>+ Ward</Text>
+                        </TouchableOpacity>
+                      </TouchableOpacity>
+
+                      {/* Wards List */}
+                      {expandedZones.has(zone.id) && (
                         <View style={styles.zoneContent}>
                           {zone.wards?.map(ward => (
                             <View key={ward.id} style={styles.wardItem}>
-                                <Text style={styles.wardIcon}>📍</Text>
-                                <Text style={styles.wardName}>{ward.name}</Text>
+                              <Text style={styles.wardIcon}>📍</Text>
+                              <Text style={styles.wardName}>{ward.name}</Text>
                             </View>
                           ))}
                           {(!zone.wards || zone.wards.length === 0) && (
-                             <Text style={styles.emptyText}>No wards added</Text>
+                            <Text style={styles.emptyText}>No wards added</Text>
                           )}
                         </View>
-                       )}
+                      )}
                     </View>
                   ))}
                   {(!corp.zones || corp.zones.length === 0) && (
@@ -219,38 +218,38 @@ export const ManageCorporationsScreen = ({ navigation }: any) => {
       {/* Create Modal */}
       <Modal visible={modalVisible} transparent={true} animationType="fade">
         <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>
-                    {modalType === 'addZone' ? 'Add Zone' : 'Add Ward'}
-                </Text>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {modalType === 'addZone' ? 'Add Zone' : 'Add Ward'}
+            </Text>
 
-                {modalType === 'addZone' && (
-                    <TextInput 
-                        style={styles.input} 
-                        placeholder="Zone Name (e.g. Zone 1)" 
-                        value={name} 
-                        onChangeText={setName} 
-                    />
-                )}
+            {modalType === 'addZone' && (
+              <TextInput
+                style={styles.input}
+                placeholder="Zone Name (e.g. Zone 1)"
+                value={name}
+                onChangeText={setName}
+              />
+            )}
 
-                {modalType === 'addWard' && (
-                    <TextInput 
-                        style={styles.input} 
-                        placeholder="Ward Name (e.g. Ward 1)" 
-                        value={name} 
-                        onChangeText={setName} 
-                    />
-                )}
+            {modalType === 'addWard' && (
+              <TextInput
+                style={styles.input}
+                placeholder="Ward Name (e.g. Ward 1)"
+                value={name}
+                onChangeText={setName}
+              />
+            )}
 
-                <View style={styles.modalButtons}>
-                    <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
-                        <Text style={styles.btnText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.createBtn} onPress={handleCreate}>
-                        <Text style={[styles.btnText, {color: 'white'}]}>Create</Text>
-                    </TouchableOpacity>
-                </View>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
+                <Text style={styles.btnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.createBtn} onPress={handleCreate}>
+                <Text style={[styles.btnText, { color: 'white' }]}>Create</Text>
+              </TouchableOpacity>
             </View>
+          </View>
         </View>
       </Modal>
 

@@ -137,8 +137,7 @@ export const AdminDashboardScreen = ({ navigation }: any) => {
   const fetchComplaints = async (token?: string, role?: string) => {
     try {
       if (!token) {
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-        token = await AsyncStorage.getItem('userToken');
+        token = (await StorageService.getItem('userToken')) || undefined;
       }
       if (!role) role = userRole;
 

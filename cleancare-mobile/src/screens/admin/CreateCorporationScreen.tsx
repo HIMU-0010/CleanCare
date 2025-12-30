@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
+import { StorageService } from '../../services/StorageService';
 
 interface ZoneInput {
   name: string;
@@ -43,10 +44,10 @@ export const CreateCorporationScreen = ({ navigation }: any) => {
       if (!z.name.trim()) continue; // Skip empty zones
 
       const wards = z.wardString
-         .split(',')
-         .map(s => s.trim())
-         .filter(s => s.length > 0);
-      
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
       processedZones.push({
         name: z.name,
         wards: wards
@@ -54,14 +55,13 @@ export const CreateCorporationScreen = ({ navigation }: any) => {
     }
 
     if (processedZones.length === 0) {
-        Alert.alert('Error', 'Please add at least one valid zone');
-        return;
+      Alert.alert('Error', 'Please add at least one valid zone');
+      return;
     }
 
     setLoading(true);
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
 
       await axios.post(`${API_URL}/locations/bulk`, {
         name,
@@ -72,9 +72,9 @@ export const CreateCorporationScreen = ({ navigation }: any) => {
       });
 
       Alert.alert('Success', 'Corporation created successfully', [
-          { text: 'OK', onPress: () => navigation.goBack() }
+        { text: 'OK', onPress: () => navigation.goBack() }
       ]);
-      
+
     } catch (error: any) {
       console.error(error);
       Alert.alert('Error', error.response?.data?.message || 'Failed to create corporation');
@@ -87,7 +87,7 @@ export const CreateCorporationScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-             <Text style={styles.backButtonText}>←</Text>
+          <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Create New Corporation</Text>
       </View>
@@ -123,9 +123,9 @@ export const CreateCorporationScreen = ({ navigation }: any) => {
               <View style={styles.zoneHeader}>
                 <Text style={styles.zoneLabel}>Add Zone</Text>
                 {zones.length > 1 && (
-                    <TouchableOpacity onPress={() => removeZone(index)} style={styles.removeBtn}>
-                        <Text style={styles.removeBtnText}>Remove</Text>
-                    </TouchableOpacity>
+                  <TouchableOpacity onPress={() => removeZone(index)} style={styles.removeBtn}>
+                    <Text style={styles.removeBtnText}>Remove</Text>
+                  </TouchableOpacity>
                 )}
               </View>
 
@@ -135,7 +135,7 @@ export const CreateCorporationScreen = ({ navigation }: any) => {
                 value={zone.name}
                 onChangeText={(text) => updateZone(index, 'name', text)}
               />
-              
+
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Ward Names (e.g. 1, 3, 8)"
@@ -154,13 +154,13 @@ export const CreateCorporationScreen = ({ navigation }: any) => {
 
       {/* Footer Actions */}
       <View style={styles.footer}>
-         <TouchableOpacity 
-            style={[styles.submitBtn, loading && styles.disabledBtn]} 
-            onPress={handleSubmit}
-            disabled={loading}
-         >
-            {loading ? <ActivityIndicator color="white" /> : <Text style={styles.submitText}>Create Corporation</Text>}
-         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.submitBtn, loading && styles.disabledBtn]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? <ActivityIndicator color="white" /> : <Text style={styles.submitText}>Create Corporation</Text>}
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

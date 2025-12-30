@@ -79,12 +79,6 @@ const SignupScreen = ({ navigation, route }: any) => {
 
       // Save session
       await StorageService.setItem('userToken', accessToken);
-      // Wait: SignupScreen used 'accessToken' key in grep results but usually we use 'userToken'. 
-      // Let's check grep result: "await AsyncStorage.setItem('accessToken', accessToken);" 
-      // Wait, LoginScreen uses 'userToken'. API.ts checks 'userToken'. 
-      // SignupScreen line 79 (grep) says: "await AsyncStorage.setItem('accessToken', accessToken);"
-      // THIS IS A BUG! It should be 'userToken' so api.ts can find it.
-      // I will fix this bug now to use 'userToken'.
 
       await StorageService.setItem('userProfile', JSON.stringify(user));
       await StorageService.setItem('userRole', 'USER'); // Ensure role is saved too if needed

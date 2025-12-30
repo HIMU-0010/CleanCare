@@ -26,6 +26,7 @@ import { ManageCorporationsScreen } from '../screens/admin/ManageCorporationsScr
 import { CreateCorporationScreen } from '../screens/admin/CreateCorporationScreen';
 import { NotificationListScreen } from '../screens/NotificationListScreen';
 import NotificationService from '../services/NotificationService';
+import { StorageService } from '../services/StorageService';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,8 +53,7 @@ export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, {}>((
           } else {
             // Fallback: Check Role
             try {
-              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-              const profileStr = await AsyncStorage.getItem('userProfile');
+              const profileStr = await StorageService.getItem('userProfile');
               if (profileStr) {
                 const profile = JSON.parse(profileStr);
                 const isAdmin = profile.role === 'WARD_ADMIN' || profile.role === 'SUPER_ADMIN' || profile.role === 'MASTER_ADMIN';
@@ -71,10 +71,9 @@ export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, {}>((
 
             // Mark notification as read
             try {
-              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
               const axios = require('axios').default;
               const API_URL = require('../config/api').API_URL;
-              const token = await AsyncStorage.getItem('userToken');
+              const token = await StorageService.getItem('userToken');
 
               // Find and mark the notification as read by complaintId
               await axios.post(`${API_URL}/notifications/mark-by-complaint/${data.complaintId}`, {}, {

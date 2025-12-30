@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../../styles/theme';
 import axios from 'axios';
 import { API_URL } from '../../../config/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageService } from '../../../services/StorageService';
 
 export const ManageContactsScreen = ({ navigation }: any) => {
   const [contacts, setContacts] = useState([]);
@@ -24,6 +24,24 @@ export const ManageContactsScreen = ({ navigation }: any) => {
     fetchContacts();
   }, []);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => {
+          setTitle('');
+          setSubtitle('');
+          setPhone('');
+          setPriority('0');
+          setColor('#FF4D4D');
+          setIsEditing(false);
+          setModalVisible(true);
+        }} style={{ marginRight: 16 }}>
+          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>+ Add</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
   const fetchContacts = async () => {
     try {
       const response = await axios.get(`${API_URL}/content/contacts`);
@@ -42,7 +60,7 @@ export const ManageContactsScreen = ({ navigation }: any) => {
       return;
     }
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await StorageService.getItem('userToken');
       const payload = {
         title, subtitle, phone, priority: parseInt(priority) || 0, color
       };
@@ -83,7 +101,7 @@ export const ManageContactsScreen = ({ navigation }: any) => {
       {
         text: 'Delete', style: 'destructive', onPress: async () => {
           try {
-            const token = await AsyncStorage.getItem('userToken');
+            const token = await StorageService.getItem('userToken');
             await axios.delete(`${API_URL}/content/contacts/${id}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
