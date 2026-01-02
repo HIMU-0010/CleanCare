@@ -1,71 +1,36 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Button, TextInput, Alert, ActivityIndicator, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getAuth, signInWithPhoneNumber, getIdToken } from '@react-native-firebase/auth';
 import { COLORS } from '../../styles/theme';
-import { StorageService } from '../../services/StorageService'; // Import StorageService
+import { StorageService } from '../../services/StorageService';
+import { API_URL } from '../../config/api';
+import axios from 'axios';
 
 export const LoginScreen = ({ navigation }: any) => {
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [confirm, setConfirm] = useState<any>(null); // To store valid verification object
-    const [verificationCode, setVerificationCode] = useState('');
+    const [phone, setPhone] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const sendVerification = async () => {
-        try {
-            setLoading(true);
-
-            let formattedPhone = phoneNumber.trim();
-            if (!formattedPhone.startsWith('+')) {
-                if (formattedPhone.startsWith('017') && formattedPhone.length === 11) {
-                    Alert.alert('Invalid Format', 'Please include country code. For the test number, enter: +10170000000');
-                    setLoading(false);
-                    return;
-                }
-                Alert.alert('Invalid Format', 'Phone number must start with + (e.g., +880...)');
-                setLoading(false);
-                return;
-            }
-
-            // signInWithPhoneNumber returns a confirmation object
-            const auth = getAuth();
-            const confirmation = await signInWithPhoneNumber(auth, formattedPhone);
-            setConfirm(confirmation);
-            Alert.alert('Verification code has been sent to your phone.');
-        } catch (err: any) {
-            console.log('Phone Auth Error:', err);
-            Alert.alert('Error', err.message);
-        } finally {
-            setLoading(false);
+    const handleLogin = async () => {
+        if (!phone || !password) {
+            Alert.alert('Error', 'Please enter both phone number and password');
+            return;
         }
-    };
 
-    const confirmCode = async () => {
         try {
-            if (!confirm) return;
             setLoading(true);
 
-            // confirm.confirm(code) validates the code
-            const userCredential = await confirm.confirm(verificationCode);
-            // userCredential.user contains the user info.
+            // Format phone if needed, but assuming user enters full or we handle it.
+            // For now, let's send as is or basic clean up.
+            const formattedPhone = phone.trim();
 
-            // Get ID token
-            const idToken = await getIdToken(userCredential.user);
-
-            const { API_URL } = require('../../config/api');
-            const axios = require('axios').default;
-            // StorageService is imported at top level
-
-            const response = await axios.post(`${API_URL}/auth/login`, {}, {
-                headers: { Authorization: `Bearer ${idToken}` }
+            const response = await axios.post(`${API_URL}/auth/login`, {
+                phone: formattedPhone,
+                password: password
             });
 
-            if (!response.data) {
-                navigation.navigate('Signup', { phone: userCredential.user.phoneNumber, uid: userCredential.user.uid, idToken: idToken });
-                return;
-            }
-
             const { accessToken, user } = response.data;
+
             if (accessToken) {
                 await StorageService.setItem('userToken', accessToken);
                 await StorageService.setItem('userProfile', JSON.stringify(user));
@@ -81,21 +46,16 @@ export const LoginScreen = ({ navigation }: any) => {
                     console.log('Non-critical: Failed to register push token:', notifError);
                 }
 
-                if (user.role === 'WARD_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MASTER_ADMIN') {
-                    navigation.replace('AdminDashboard');
-                } else {
-                    navigation.replace('CitizenHome');
-                }
+                // Reset navigation to Home/Dashboard to prevent going back to login
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: user.role === 'USER' ? 'CitizenHome' : 'AdminDashboard' }],
+                });
             }
-        } catch (err: any) {
-            console.error(err);
-            if (err.message.includes('auth/invalid-verification-code')) {
-                Alert.alert('Invalid Code', 'The code you entered is incorrect.');
-            } else if (err.response && (err.response.status === 404 || err.response.status === 400 || !err.response.data)) {
-                Alert.alert('Login Failed', 'Please try again.');
-            } else {
-                Alert.alert('Error', err.message || 'Login Failed');
-            }
+        } catch (error: any) {
+            console.error('Login Error:', error);
+            const message = error.response?.data?.message || 'Login Failed';
+            Alert.alert('Error', message);
         } finally {
             setLoading(false);
         }
@@ -107,69 +67,65 @@ export const LoginScreen = ({ navigation }: any) => {
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
             >
-                <ScrollView contentContainerStyle={styles.scrollContent}>
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-                    <View style={styles.logoContainer}>
-                        <Image
-                            source={require('../../../assets/logo.png')}
-                            style={styles.logo}
-                            resizeMode="contain"
-                        />
-                        <Text style={styles.title}>Welcome To <Text style={{ fontWeight: 'bold', fontSize: 30 }}>Clean Care</Text></Text>
+                    <View style={styles.headerContainer}>
+                        <View style={styles.logoCircle}>
+                            <Image
+                                source={require('../../../assets/logo.png')}
+                                style={styles.logo}
+                                resizeMode="contain"
+                            />
+                        </View>
+                        <Text style={styles.welcomeText}>Welcome Back</Text>
+                        <Text style={styles.subText}>Login to continue to Clean Care</Text>
                     </View>
 
                     <View style={styles.formContainer}>
-                        {!confirm ? (
-                            <>
-                                <Text style={styles.label}>Phone Number</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="+880 1XXX-XXXXXX"
-                                    placeholderTextColor="#999"
-                                    autoComplete="tel"
-                                    keyboardType="phone-pad"
-                                    textContentType="telephoneNumber"
-                                    onChangeText={setPhoneNumber}
-                                    value={phoneNumber}
-                                />
+                        <Text style={styles.label}>Phone Number</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="+880 1XXX-XXXXXX"
+                            placeholderTextColor="#999"
+                            keyboardType="phone-pad"
+                            value={phone}
+                            onChangeText={setPhone}
+                        />
 
-                                {loading ? (
-                                    <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
-                                ) : (
-                                    <TouchableOpacity style={styles.button} onPress={sendVerification}>
-                                        <Text style={styles.buttonText}>Send Verification Code</Text>
-                                    </TouchableOpacity>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <Text style={styles.label}>Enter Verification Code</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    editable={!!confirm}
-                                    placeholder="123456"
-                                    placeholderTextColor="#999"
-                                    onChangeText={setVerificationCode}
-                                    keyboardType="number-pad"
-                                    value={verificationCode}
-                                />
+                        <Text style={styles.label}>Password</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Enter your password"
+                            placeholderTextColor="#999"
+                            secureTextEntry
+                            value={password}
+                            onChangeText={setPassword}
+                        />
 
-                                {loading ? (
-                                    <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
-                                ) : (
-                                    <>
-                                        <TouchableOpacity style={styles.button} onPress={confirmCode}>
-                                            <Text style={styles.buttonText}>Confirm Code</Text>
-                                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.forgotPassword} onPress={() => Alert.alert('Info', 'Please contact admin to reset password')}>
+                            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                        </TouchableOpacity>
 
-                                        <TouchableOpacity style={styles.cancelButton} onPress={() => setConfirm(null)}>
-                                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                                        </TouchableOpacity>
-                                    </>
-                                )}
-                            </>
-                        )}
+                        <TouchableOpacity
+                            style={styles.loginButton}
+                            onPress={handleLogin}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#3FA564" />
+                            ) : (
+                                <Text style={styles.loginButtonText}>Login</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <View style={styles.footer}>
+                            <Text style={styles.footerText}>Don't have an account? </Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                                <Text style={styles.signupText}>Sign Up</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
+
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -186,74 +142,95 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 24,
     },
-    logoContainer: {
+    headerContainer: {
         alignItems: 'center',
-        marginBottom: 50,
+        marginBottom: 40,
+    },
+    logoCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
     },
     logo: {
-        width: 120,
-        height: 120,
-        marginBottom: 20,
-        borderRadius: 60, // Circular Logo if needed, or just let resizeMode contain handle it
-        backgroundColor: '#fff', // White bg for the logo circle if transparent
-        borderWidth: 2,
-        borderColor: '#fff',
+        width: 70,
+        height: 70,
     },
-    title: {
-        fontSize: 22,
-        fontWeight: '600',
+    welcomeText: {
+        fontSize: 24,
+        fontWeight: 'bold',
         color: '#fff',
-        textAlign: 'center',
+        marginBottom: 8,
+    },
+    subText: {
+        fontSize: 16,
+        color: '#E0F2E9',
     },
     formContainer: {
         width: '100%',
     },
     label: {
-        marginBottom: 8,
         fontSize: 16,
+        fontWeight: '600',
         color: '#fff',
-        fontWeight: '500',
+        marginBottom: 8,
         marginLeft: 4,
     },
     input: {
         backgroundColor: '#fff',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 30, // Fully rounded
+        borderRadius: 12,
+        padding: 16,
         fontSize: 16,
-        marginBottom: 10,
+        marginBottom: 16,
         color: '#333',
-        elevation: 5, // Shadow for Android
-        // shadowColor: '#000', // Shadow for iOS
+    },
+    forgotPassword: {
+        alignSelf: 'flex-end',
+        marginBottom: 30,
+    },
+    forgotPasswordText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    loginButton: {
+        backgroundColor: '#fff',
+        borderRadius: 30,
+        paddingVertical: 16,
+        alignItems: 'center',
+        elevation: 2,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
+        marginBottom: 20,
     },
-    button: {
-        backgroundColor: '#fff',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 30,
-        alignItems: 'center',
-        marginTop: 10,
-        elevation: 5,
-        shadowColor: '#111',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-    },
-    buttonText: {
+    loginButtonText: {
         color: '#3FA564',
         fontSize: 18,
         fontWeight: 'bold',
     },
-    cancelButton: {
-        marginTop: 20,
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    cancelButtonText: {
+    footerText: {
+        color: '#E0F2E9',
+        fontSize: 16,
+    },
+    signupText: {
         color: '#fff',
         fontSize: 16,
+        fontWeight: 'bold',
         textDecorationLine: 'underline',
     },
 });

@@ -12,6 +12,9 @@ export class User {
   @Column({ unique: true })
   phone: string;
 
+  @Column({ select: false })
+  password: string;
+
   @Column({ nullable: true })
   email: string;
 

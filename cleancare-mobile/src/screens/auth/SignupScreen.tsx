@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, Keyboard, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, Keyboard, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../styles/theme';
 import LocationSelector from '../../components/common/LocationSelector';
@@ -7,8 +7,9 @@ import axios from 'axios';
 import { StorageService } from '../../services/StorageService';
 import { API_URL } from '../../config/api';
 
-const SignupScreen = ({ navigation, route }: any) => {
-  const { phone, uid } = route.params || {}; // Passed from Login
+const SignupScreen = ({ navigation }: any) => {
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
 
@@ -34,44 +35,36 @@ const SignupScreen = ({ navigation, route }: any) => {
     };
   }, []);
 
-  const isFormValid = name.trim().length > 0 && address.trim().length > 0 && wardId && zoneId && corpId && agreedToTerms;
+  const isFormValid = phone.trim().length > 0 &&
+    password.trim().length >= 6 &&
+    name.trim().length > 0 &&
+    address.trim().length > 0 &&
+    wardId && zoneId && corpId && agreedToTerms;
 
   const handleSignup = async () => {
     if (!isFormValid) {
-      // Should handle via UI disabled state, but safety check
+      if (password.trim().length < 6) {
+        Alert.alert('Invalid Password', 'Password must be at least 6 characters long.');
+        return;
+      }
+      Alert.alert('Missing Fields', 'Please fill all fields and agree to terms.');
       return;
     }
 
     try {
       setLoading(true);
-      // We need the firebase token again. 
-      // In a real app, you'd might store it in context or pass it.
-      // For now, we assume the backend validates mainly the phone from the token, 
-      // BUT our register endpoint requires the token.
-      // If the token expired, we might need to re-auth. 
-      // For simplification, let's assume `route.params` has a valid `idToken`.
-      const idToken = route.params?.idToken;
-
-      if (!idToken) {
-        Alert.alert('Error', 'Authentication failed. Please login again.');
-        navigation.replace('Login');
-        return;
-      }
 
       const response = await axios.post(
         `${API_URL}/auth/register`,
         {
+          phone,
+          password,
           name,
           address,
           role: 'USER',
           wardId,
           zoneId,
           corporationId: corpId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-          },
         }
       );
 
@@ -79,9 +72,8 @@ const SignupScreen = ({ navigation, route }: any) => {
 
       // Save session
       await StorageService.setItem('userToken', accessToken);
-
       await StorageService.setItem('userProfile', JSON.stringify(user));
-      await StorageService.setItem('userRole', 'USER'); // Ensure role is saved too if needed
+      await StorageService.setItem('userRole', 'USER');
 
       // Register push notification token
       try {
@@ -92,10 +84,16 @@ const SignupScreen = ({ navigation, route }: any) => {
       }
 
       Alert.alert('Success', 'Account created successfully!');
-      navigation.replace('CitizenHome');
+      // Reset navigation
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'CitizenHome' }],
+      });
+
     } catch (error: any) {
       console.error('Signup Error:', error.response?.data || error.message);
-      Alert.alert('Error', 'Failed to create account. Please try again.');
+      const msg = error.response?.data?.message || 'Failed to create account. Please try again.';
+      Alert.alert('Error', msg);
     } finally {
       setLoading(false);
     }
@@ -103,39 +101,64 @@ const SignupScreen = ({ navigation, route }: any) => {
 
   return (
     <SafeAreaView style={[styles.container, { marginBottom: keyboardOffset }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Title removed since Header "Create Account" covers it? Or Keep it? 
-            Screenshot shows only header. Let's keep "Complete Your Profile" as helper text 
-            or remove if strictly following screenshot.
-            The screenshot shows "Create Account" in Header. 
-            I will keep "Complete details" as subtitle context.
-        */}
-        <Text style={styles.subtitle}>Phone: {phone}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+        <Text style={styles.headerTitle}>Create Account</Text>
+        <Text style={styles.headerSubtitle}>Sign up to get started</Text>
+
+        <Text style={styles.label}>Phone Number</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="+880 1XXX-XXXXXX"
+          placeholderTextColor="#999"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+        />
+
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Min 6 characters"
+          placeholderTextColor="#999"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
 
         <Text style={styles.label}>Full Name</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter your name"
+          placeholderTextColor="#999"
           value={name}
           onChangeText={setName}
         />
 
+        <View style={styles.divider} />
         <Text style={styles.sectionHeader}>Residence Location</Text>
         <Text style={styles.helperText}>
-          Please select where you live. This will be used to route your complaints.
+          Select where you live to route your complaints.
         </Text>
 
-        <LocationSelector
-          onLocationSelected={(ward, zone, corp) => {
-            setWardId(ward);
-            setZoneId(zone);
-            setCorpId(corp);
-          }}
-        />
+        {/* Location Selector might need style tweaks for green bg, or we wrap it in a white container? 
+            Let's wrap it in a white card.
+        */}
+        <View style={styles.card}>
+          <LocationSelector
+            onLocationSelected={(ward, zone, corp) => {
+              setWardId(ward);
+              setZoneId(zone);
+              setCorpId(corp);
+            }}
+          />
+        </View>
+
         <Text style={styles.label}>Street Address</Text>
         <TextInput
           style={styles.input}
           placeholder="House No, Road No, Area..."
+          placeholderTextColor="#999"
           value={address}
           onChangeText={setAddress}
           multiline
@@ -152,20 +175,28 @@ const SignupScreen = ({ navigation, route }: any) => {
             </View>
           </TouchableOpacity>
           <Text style={styles.tncText}>
-            I have read and agreed to the <Text style={{ fontWeight: 'bold', color: COLORS.primary }} onPress={() => navigation.navigate('TermsAndConditions')}>Terms & Conditions</Text>
+            I have read and agree to the <Text style={{ fontWeight: 'bold', textDecorationLine: 'underline' }} onPress={() => navigation.navigate('TermsAndConditions')}>Terms & Conditions</Text>
           </Text>
         </View>
 
         <TouchableOpacity
           style={[
             styles.button,
-            (!isFormValid || loading) && styles.disabledButton // Disable style if form invalid logic
+            (!isFormValid || loading) && styles.disabledButton
           ]}
           onPress={handleSignup}
           disabled={!isFormValid || loading}
         >
-          <Text style={styles.buttonText}>{loading ? 'Creating...' : 'Create Account'}</Text>
+          {loading ? <ActivityIndicator color="#3FA564" /> : <Text style={styles.buttonText}>Sign Up</Text>}
         </TouchableOpacity>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginLink}>Login</Text>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -174,53 +205,66 @@ const SignupScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // White background consistent with modern look
+    backgroundColor: '#3FA564', // Green Theme
   },
   scrollContent: {
-    padding: 20,
+    padding: 24,
+    paddingBottom: 50,
   },
-  title: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#3FA564',
+    color: '#fff',
     marginBottom: 5,
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
+    color: '#E0F2E9',
+    marginBottom: 30,
   },
   label: {
     fontSize: 16,
     marginBottom: 8,
-    color: '#333',
+    color: '#fff',
     fontWeight: '600',
+    marginLeft: 4,
   },
   input: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#eee',
+    fontSize: 16,
+    color: '#333',
   },
   sectionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 5,
-    color: '#333',
+    color: '#fff',
   },
   helperText: {
     fontSize: 14,
-    color: '#666',
+    color: '#E0F2E9',
     marginBottom: 15,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginVertical: 10,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
   },
   tncContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 10,
+    marginBottom: 30,
   },
   checkboxContainer: {
     paddingRight: 10,
@@ -229,13 +273,12 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderColor: '#ccc',
+    borderColor: '#fff',
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxChecked: {
-    borderColor: '#3FA564',
     backgroundColor: '#fff',
   },
   checkboxInner: {
@@ -246,25 +289,40 @@ const styles = StyleSheet.create({
   },
   tncText: {
     fontSize: 14,
-    color: '#333',
-    flex: 1, // Wrap text
+    color: '#fff',
+    flex: 1,
   },
   button: {
-    backgroundColor: '#3FA564',
+    backgroundColor: '#fff',
     padding: 16,
-    borderRadius: 30, // Fully rounded as per screenshot
+    borderRadius: 30,
     alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 20,
     elevation: 2,
   },
   disabledButton: {
-    backgroundColor: 'rgba(63, 165, 100, 0.5)', // Faded green for disabled
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     elevation: 0,
   },
   buttonText: {
-    color: '#fff',
+    color: '#3FA564',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  footerText: {
+    color: '#E0F2E9',
+    fontSize: 16,
+  },
+  loginLink: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
 });
 

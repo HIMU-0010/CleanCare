@@ -7,16 +7,13 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  @UseGuards(AuthGuard('firebase-jwt'))
-  async login(@Request() req) {
-    // req.user contains the decoded firebase token payload returned by Strategy.validate()
-    return this.authService.validateUser(req.user);
+  async login(@Body() body: any) {
+    return this.authService.login(body);
   }
 
   @Post('register')
-  @UseGuards(AuthGuard('firebase-jwt'))
-  async register(@Request() req, @Body() body: any) {
-      return this.authService.register(body, req.user);
+  async register(@Body() body: any) {
+      return this.authService.register(body);
   }
 
   @Get('profile')

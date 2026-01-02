@@ -14,6 +14,13 @@ export class UsersService {
     return this.usersRepository.findOneBy({ phone });
   }
 
+  async findUserForLogin(phone: string): Promise<User | null> {
+      return this.usersRepository.createQueryBuilder("user")
+          .addSelect("user.password")
+          .where("user.phone = :phone", { phone })
+          .getOne();
+  }
+
   async create(createUserDto: any): Promise<User> {
     const user = this.usersRepository.create(createUserDto);
     // Force cast if linter thinks it might be array
