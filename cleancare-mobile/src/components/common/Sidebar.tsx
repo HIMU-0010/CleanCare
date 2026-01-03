@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   userRole: {
-    color: COLORS.lightGray,
+    color: COLORS.cancel_text,
     fontSize: 12,
     marginTop: 4,
   },
