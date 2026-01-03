@@ -51,7 +51,7 @@ export class AdminsController {
   @UseGuards(AuthGuard('jwt'))
   async updateAdmin(
     @Param('id') id: string,
-    @Body() body: { name?: string; phone?: string; zoneIds?: string[]; wardId?: string },
+    @Body() body: { name?: string; phone?: string; password?: string; zoneIds?: string[]; wardId?: string },
     @Request() req,
   ) {
     return this.adminsService.updateAdmin(id, body, req.user);

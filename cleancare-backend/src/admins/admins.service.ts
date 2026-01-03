@@ -178,7 +178,7 @@ export class AdminsService {
 
   async updateAdmin(
     adminId: string, 
-    updateData: { name?: string; phone?: string; zoneIds?: string[]; wardId?: string }, 
+    updateData: { name?: string; phone?: string; password?: string; zoneIds?: string[]; wardId?: string }, 
     currentUser: User
   ) {
     // Only MASTER_ADMIN can update admins
@@ -205,6 +205,10 @@ export class AdminsService {
         throw new BadRequestException('Phone number is already in use');
       }
       admin.phone = updateData.phone;
+    }
+
+    if (updateData.password && updateData.password.length >= 6) {
+        admin.password = await bcrypt.hash(updateData.password, 10);
     }
 
     // Update zones for Super Admin

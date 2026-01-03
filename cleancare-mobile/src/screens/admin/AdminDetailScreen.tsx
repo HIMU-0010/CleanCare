@@ -5,6 +5,7 @@ import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 import { StorageService } from '../../services/StorageService';
+import { COLORS } from '../../styles/theme';
 
 export const AdminDetailScreen = ({ navigation, route }: any) => {
   const { adminId } = route.params;
@@ -14,9 +15,9 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Edit form state
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editPassword, setEditPassword] = useState('');
 
   // For Super Admin: zone selection
   const [availableZones, setAvailableZones] = useState<any[]>([]);
@@ -111,6 +112,15 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
 
       const updateData: any = { name: editName, phone: editPhone };
 
+      if (editPassword) {
+        if (editPassword.length < 6) {
+          Alert.alert('Error', 'Password must be at least 6 characters');
+          setSaving(false);
+          return;
+        }
+        updateData.password = editPassword;
+      }
+
       // Add zone/ward updates based on admin role
       if (admin.role === 'SUPER_ADMIN') {
         updateData.zoneIds = selectedZoneIds;
@@ -126,6 +136,7 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
       // Refresh admin data
       await fetchAdminDetails();
       setIsEditing(false);
+      setEditPassword('');
       Alert.alert('Success', 'Admin updated successfully');
     } catch (error: any) {
       console.error(error);
@@ -244,6 +255,19 @@ export const AdminDetailScreen = ({ navigation, route }: any) => {
               <Text style={styles.value}>{admin.phone}</Text>
             )}
           </View>
+
+          {isEditing && (
+            <View style={styles.field}>
+              <Text style={styles.label}>Change Password (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={editPassword}
+                onChangeText={setEditPassword}
+                placeholder="Enter new password (min 6 chars)"
+                secureTextEntry
+              />
+            </View>
+          )}
         </View>
 
         {/* Assignment Info */}
@@ -424,7 +448,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007bff',
+    color: COLORS.primary,
     marginBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
@@ -502,7 +526,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   editButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: COLORS.primary,
   },
   saveButton: {
     backgroundColor: '#28a745',
