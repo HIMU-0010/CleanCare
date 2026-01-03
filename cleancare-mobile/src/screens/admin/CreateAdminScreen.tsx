@@ -9,6 +9,7 @@ import { COLORS } from '../../styles/theme';
 export const CreateAdminScreen = ({ navigation, route }: any) => {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
+    const [password, setPassword] = useState('');
     const [role, setRole] = useState('WARD_ADMIN');
     const [loading, setLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(true);
@@ -77,8 +78,13 @@ export const CreateAdminScreen = ({ navigation, route }: any) => {
     };
 
     const handleCreate = async () => {
-        if (!name || !phone) {
+        if (!name || !phone || !password) {
             Alert.alert('Error', 'Please fill all required fields');
+            return;
+        }
+
+        if (password.length < 6) {
+            Alert.alert('Error', 'Password must be at least 6 characters');
             return;
         }
 
@@ -89,6 +95,7 @@ export const CreateAdminScreen = ({ navigation, route }: any) => {
             const payload: any = {
                 name,
                 phone,
+                password,
                 role,
             };
 
@@ -229,6 +236,15 @@ export const CreateAdminScreen = ({ navigation, route }: any) => {
                     value={phone}
                     onChangeText={setPhone}
                     keyboardType="phone-pad"
+                />
+
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Enter password (min 6 chars)"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
                 />
 
                 <Text style={styles.label}>Role</Text>

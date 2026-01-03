@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../common/enums/role.enum';
 import { UsersService } from '../users/users.service';
@@ -18,6 +19,7 @@ export class AdminsService {
   async createAdmin(
     creator: User,
     phone: string,
+    password: string,
     role: Role,
     name: string,
     assignedWardId?: string,
@@ -27,6 +29,10 @@ export class AdminsService {
     // 1. Permission Check: ONLY MASTER_ADMIN can create admins
     if (creator.role !== Role.MASTER_ADMIN) {
         throw new BadRequestException('Only Master Admins can create admins');
+    }
+
+    if (!password || password.length < 6) {
+        throw new BadRequestException('Password must be at least 6 characters');
     }
 
     if (role === Role.SUPER_ADMIN) {
@@ -52,10 +58,13 @@ export class AdminsService {
         throw new ConflictException('User with this phone already exists');
     }
 
-    // 3. Create User with Relations
-    const newUser = await this.usersService.create({ phone, role, name });
+    // 3. Hash Password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Update Relations via UsersService
+    // 4. Create User with Relations
+    const newUser = await this.usersService.create({ phone, password: hashedPassword, role, name });
+
+    // 5. Update Relations via UsersService
     return this.usersService.updateAdminRelations(
         newUser.id, 
         assignedWardId, 

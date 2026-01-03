@@ -11,11 +11,12 @@ export class AdminsController {
   @UseGuards(AuthGuard('jwt')) 
   async createAdmin(
     @Request() req,
-    @Body() body: { phone: string; role: Role; name: string; wardId?: string; zoneIds?: string[]; corporationId?: string },
+    @Body() body: { phone: string; password: string; role: Role; name: string; wardId?: string; zoneIds?: string[]; corporationId?: string },
   ) {
     return this.adminsService.createAdmin(
         req.user,
         body.phone,
+        body.password,
         body.role,
         body.name,
         body.wardId,
